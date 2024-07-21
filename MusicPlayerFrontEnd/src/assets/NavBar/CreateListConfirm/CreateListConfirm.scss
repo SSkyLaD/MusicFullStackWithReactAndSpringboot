@@ -1,0 +1,81 @@
+.create-popup{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba($color: #000000, $alpha: 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    .create-container{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        border-radius: 10px;
+        width: 450px;
+        height: 180px;
+        color: white;
+        overflow: hidden;
+        background-color: #2b2b2bff;
+        .top-section{
+            padding: 15px 30px;
+            width: 100%;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            h3{
+                margin-top: 10px;
+            }
+            input{
+                margin-top: 20px;
+                width: 80%;
+                height: 30px;
+                padding: 0 10px 0 10px;
+                border-radius: 10px;
+                background-color: rgba(255, 246, 246, 0.76);
+                box-shadow: 0 5px 5px rgba(59, 40, 40, 0.22);
+                border: transparent;
+            }
+            input:focus{
+                outline: none;
+            }
+            .warning{
+                font-size: small;
+                margin-top: 20px;
+                color: rgb(255, 5, 5);
+            }
+        }
+        .bottom-section{
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            background-color: #202020FF;
+            align-items: center;
+            justify-content: space-around;
+            button{
+                border: none;
+                color: white;
+                border-radius: 5px;
+                background-color: #2b2b2bff;
+                width: 200px;
+                height: 25px;
+                transition: 0.5s;
+            }
+            .confirm{
+                background-color: rgb(4, 197, 45);
+            }
+            button:hover{
+                cursor: pointer;
+                opacity: 0.7;
+            }
+            .confirm:hover{
+                cursor: pointer;
+                box-shadow: 0px 0px 5px rgb(4, 197, 45),
+                0px 0px 10px rgb(4, 197, 45);
+            }
+        }
+    }
+}

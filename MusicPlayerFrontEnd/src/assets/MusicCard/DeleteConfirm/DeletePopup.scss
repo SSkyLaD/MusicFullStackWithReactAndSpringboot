@@ -1,0 +1,70 @@
+.popup-delete {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba($color: #000000, $alpha: 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    .popup-container {
+        display: flex;
+        flex-direction: column;
+        border-radius: 10px;
+        width: 450px;
+        height: 200px;
+        color: white;
+        overflow: hidden;
+        background-color: #2b2b2bff;
+        .pop-top{
+            h3{
+                margin-bottom: 10px;
+                overflow: hidden;
+            }
+            p{
+                all:unset
+            }
+            h3, p{
+                text-align: center;
+            }
+            padding: 15px 30px;
+            width: 100%;
+            height: 80%;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .pop-bot {
+            display: flex;
+            flex-grow: 1;
+            background-color: #202020FF;
+            align-items: center;
+            justify-content: space-around;
+            button{
+                border: none;
+                color: white;
+                border-radius: 5px;
+                background-color: #2b2b2bff;
+                width: 200px;
+                height: 25px;
+                transition: 0.5s;
+            }
+            button:first-child{
+                background-color: rgb(255, 5, 5);
+            }
+            button:last-child:hover{
+                cursor: pointer;
+                opacity: 0.7;
+            }
+            button:first-child:hover{
+                cursor: pointer;
+                box-shadow: 0px 0px 5px rgba(255, 0, 0, 1),
+                0px 0px 10px rgba(255, 0, 0, 1);
+            }
+        }
+    }
+}

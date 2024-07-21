@@ -1,0 +1,157 @@
+.home {
+    font-family: "Roboto", sans-serif;
+    flex-grow: 1;
+    background-image: url("/hill.jpg");
+    background-size: cover;
+    display: flex;
+    min-width: 370px;
+    padding-bottom: 120px;
+    .main-window {
+        flex-grow: 1;
+    }
+    .side-window {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 400px;
+        height: 100%;
+        .play-queue {
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            align-items: center;
+            overflow: auto;
+            border-radius: 15px;
+            backdrop-filter: blur(100px);
+            border: 1px solid;
+            height: 79%;
+            width: 280px;
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+            .nothing{
+                display: flex;
+                align-items: center;
+                width: 250px;
+                height: 70px;
+                flex-shrink: 0;// Ngăn ngừa flexbox  
+                border-bottom: 1px solid white;
+                .nothing-picture{
+                    height: 55px;
+                    width: 55px;
+                    border-radius: 10px;
+                    background-color: rgb(247, 249, 252);
+                }
+                .nothing-text{
+                    flex-grow: 1;
+                    margin-left: 10px;
+                    .nothing-name{
+                        width: 150px;
+                        height: 12px;
+                        background-color: rgb(247, 249, 252);
+                        border-radius: 10px;
+                    }
+                    .nothing-artist{
+                        margin-top: 5px;
+                        width: 100px;
+                        height: 10px;
+                        background-color: rgb(247, 249, 252);
+                        border-radius: 10px;
+                    }
+                }
+                
+
+            }
+            .queue-item {
+                display: flex;
+                align-items: center;
+                border-radius: 8px;
+                width: 250px;
+                height: 70px;
+                flex-shrink: 0;
+                overflow: hidden;
+                padding-left: 10px;
+                cursor: pointer;
+                color: rgb(255, 255, 255);
+                img {
+                    height: 55px;
+                    width: 55px;
+                    border-radius: 10px;
+                    transition: 0.5s;
+                }
+                .text-content {
+                    flex-grow: 1;
+                    margin-left: 10px;
+                }
+                .song-name {
+                    font-size: 1rem;
+                    max-width: 185px;
+                    max-height: 39px;
+                    font-weight: bold;
+                    overflow: hidden;
+                    text-overflow: ellipsis; /* Hiển thị dấu "..." khi văn bản bị tràn */
+                    white-space: pre-line; /* Đảm bảo giữ nguyên các dòng văn bản */
+                }
+                .artis {
+                    font-size: 0.7rem;
+                    max-width: 185px;
+                    max-height: 27px;
+                    overflow: hidden;
+                    text-overflow: ellipsis; /* Hiển thị dấu "..." khi văn bản bị tràn */
+                    white-space: pre-line; /* Đảm bảo giữ nguyên các dòng văn bản */
+                }
+            }
+            .queue-item:hover{
+                text-shadow:0px 0px 5px rgba(255, 0, 0, 1) ;
+                img{
+                    box-shadow: 0px 0px 5px rgba(255, 0, 0, 1),
+                    0px 0px 10px rgba(255, 0, 0, 1);
+                }
+            }
+
+            .queue-item-playing {
+                display: flex;
+                align-items: center;
+                border-radius: 8px;
+                width: 250px;
+                height: 70px;
+                min-height: 70px;
+                overflow: hidden;
+                padding-left: 10px;
+                border: 2px solid white;
+                box-shadow: 0 5px 5px rgba(255, 26, 26, 0.22);
+                transition: 0.2s;
+                cursor: pointer;
+                img {
+                    height: 55px;
+                    width: 55px;
+                    border-radius: 10px;
+                }
+                .text-content {
+                    flex-grow: 1;
+                    margin-left: 10px;
+                }
+                .song-name {
+                    font-size: 1rem;
+                    max-width: 185px;
+                    max-height: 39px;
+                    font-weight: bold;
+                    overflow: hidden;
+                    text-overflow: ellipsis; /* Hiển thị dấu "..." khi văn bản bị tràn */
+                    white-space: pre-line; /* Đảm bảo giữ nguyên các dòng văn bản */
+                }
+                .artis {
+                    font-size: 0.7rem;
+                    max-width: 185px;
+                    max-height: 27px;
+                    overflow: hidden;
+                    text-overflow: ellipsis; /* Hiển thị dấu "..." khi văn bản bị tràn */
+                    white-space: pre-line; /* Đảm bảo giữ nguyên các dòng văn bản */
+                }
+            }
+        }
+        .play-queue::-webkit-scrollbar {
+            display: none;
+        }
+    }
+}
