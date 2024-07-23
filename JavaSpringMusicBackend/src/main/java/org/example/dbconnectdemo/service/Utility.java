@@ -1,7 +1,9 @@
 package org.example.dbconnectdemo.service;
 
+import lombok.experimental.UtilityClass;
 import org.example.dbconnectdemo.model.Song;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 
 import java.security.MessageDigest;
 import java.util.Collections;
@@ -9,16 +11,6 @@ import java.util.Comparator;
 import java.util.List;
 
 public class Utility {
-
-    @Value("${FRONTEND_URL}")
-    public static String FRONTEND_URl;
-    
-    @Value("${STATIC_FILE_URL}")
-    public static String STATIC_FILE_URL;
-
-    //Config lai application.property
-    @Value("${FRONTEND_ID_KEY}")
-    public static String FRONTEND_ID_KEY = "4PvBlqCTz5";
 
     public static void sortSongs(List<Song> songs, String field, String direction){
         if(field.equals("name")){

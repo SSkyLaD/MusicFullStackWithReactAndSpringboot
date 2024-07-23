@@ -23,20 +23,13 @@ public interface UserService{
 
     void deleteUser(String username, String inputPassword);
 
-    List<SongDto> getAllUserSongs(String username);
-
     List<SongDto> getAllUserSongsWithSortAndPaging(String username,int pageNo,int pageSize, String field, String direction);
 
     List<SongDto> searchAllUserSongsLikeNameWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name);
 
     List<SongDto> searchAllUserSongsLikeArtistWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name);
 
-    //legacy method
-    List<SongDto> searchAllUserSongsLikeName(String username, String name);
-
     Song getUserSong(String username, Long songId);
-
-    List<SongDto> getAllUserFavoriteSongs(String username);
 
     List<SongDto> getAllUserFavoriteSongsWithSortAndPaging(String username,int pageNo,int pageSize, String field, String direction);
 
@@ -44,14 +37,9 @@ public interface UserService{
 
     List<SongDto> searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name);
 
-    //legacy method
-    List<SongDto> searchAllUserFavoriteSongsLikeName(String username, String name);
-
     SongDto updateUserFavoriteSong(String username, Long songId, boolean isFavorite);
 
-    void addSongToUser(String username, MultipartFile file) throws IOException, CannotReadException, TagException, InvalidAudioFrameException, ReadOnlyFileException;
-
-    List<String> addSongsToUser(String username, MultipartFile[] files) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException;
+    List<SongDto> addSongsToUser(String username, MultipartFile[] files) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException;
 
     SongDto deleteSongFromUser(String username, Long id);
 

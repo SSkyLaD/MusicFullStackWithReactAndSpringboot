@@ -27,15 +27,23 @@ export default function Player() {
         mode: "none",
     });
 
+    const audioRef = React.useRef(null);
+
     const play = () => {
         notification(`▶ Now playing : ${playSong.name} - ${playSong.artist}`);
         const song = document.querySelector(".song");
+        setPlayerData((prev) => {
+            return { ...prev, isPlayed: true };
+        });
         song.play();
     };
 
     const pause = () => {
         notification(`⏸ Now stopping : ${playSong.name} - ${playSong.artist}`);
         const song = document.querySelector(".song");
+        setPlayerData((prev) => {
+            return { ...prev, isPlayed: false };
+        });
         song.pause();
     };
 
@@ -160,14 +168,8 @@ export default function Player() {
     function playMusic() {
         if (!playerData.isPlayed) {
             play();
-            setPlayerData((prev) => {
-                return { ...prev, isPlayed: true };
-            });
         } else {
             pause();
-            setPlayerData((prev) => {
-                return { ...prev, isPlayed: false };
-            });
         }
     }
     function changeVolume(event) {
@@ -182,13 +184,39 @@ export default function Player() {
     // khi playSong thay đổi thì bài hát tự động được nạp vào player và chạy
     React.useEffect(() => {
         if (playSong.id != "") {
-        
             document.querySelector(".song").src = `${api}/api/v1/users/songs/stream/${tokenData.token}/${playSong.id}`
             setPlayerData((prev) => {
                 return { ...prev, isPlayed: true };
             });
         }
     }, [playSong]);
+
+    React.useEffect(() => {
+        if ('mediaSession' in navigator) {
+          navigator.mediaSession.setActionHandler('play', () => {
+            play()
+          });
+    
+          navigator.mediaSession.setActionHandler('pause', () => {
+            pause()
+          });
+    
+          navigator.mediaSession.setActionHandler('previoustrack', () => {
+            handleSkipSong()
+          });
+    
+          navigator.mediaSession.setActionHandler('nexttrack', () => {
+            handleBackSong()
+          });
+          navigator.mediaSession.metadata = new window.MediaMetadata({
+            title: playSong.name,
+            artist: playSong.artist,
+            artwork: [
+              { src: playSong.albumImageBase64, sizes: '96x96', type: 'image/jpeg' },
+            ],
+          });
+        }
+      }, []);
 
 
     return (
@@ -198,6 +226,7 @@ export default function Player() {
                 onLoadedMetadata={handleLoadedMetadata}
                 onTimeUpdate={handleTimeUpdate}
                 onEnded={handleTimeEnded}
+                ref={audioRef}
                 loop={playerData.mode === "loop" ? true : false}
                 muted={playerData.isMuted}
             />

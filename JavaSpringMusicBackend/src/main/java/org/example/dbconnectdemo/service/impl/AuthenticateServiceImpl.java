@@ -9,6 +9,7 @@ import org.example.dbconnectdemo.repository.UserRepository;
 import org.example.dbconnectdemo.service.AuthenticateService;
 import org.example.dbconnectdemo.service.UserService;
 import org.example.dbconnectdemo.service.Utility;
+import org.example.dbconnectdemo.spring_security.ApplicationConfig;
 import org.example.dbconnectdemo.spring_security.JwtUlti;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 @Service
 @AllArgsConstructor
 public class AuthenticateServiceImpl implements AuthenticateService {
+
+    private final ApplicationConfig applicationConfig;
 
     private final UserService userService;
 
@@ -29,7 +32,7 @@ public class AuthenticateServiceImpl implements AuthenticateService {
 
     @Override
     public void register(RegisterBody registerBody) {
-        String combineParam = registerBody.getUsername() + "|"+ registerBody.getEmail() +"|"+ registerBody.getPassword() +"|" + Utility.FRONTEND_ID_KEY;
+        String combineParam = registerBody.getUsername() + "|"+ registerBody.getEmail() +"|"+ registerBody.getPassword() +"|" + applicationConfig.getFrontendIdKey();
 
         String checkSum = Utility.sha256(combineParam);
 

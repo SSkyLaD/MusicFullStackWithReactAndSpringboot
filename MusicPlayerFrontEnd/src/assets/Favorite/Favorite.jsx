@@ -19,6 +19,7 @@ export default function Favorite() {
     const [searchBy, setSearchBy] = React.useState("name");
     const [sortBy, setSortBy] = React.useState("uploadDate");
     const [sortDirection, setSortDirection] = React.useState("asc");
+    const [timeoutId, setTimeoutId] = React.useState(null); // State to store the timeout ID
     const [isLoading, setIsLoading] = React.useState(false);
     const filterRef = React.useRef(null);
 
@@ -48,46 +49,56 @@ export default function Favorite() {
             });
     };
 
+
+    const searchSongsPaging = (input, page = 0) => {
+        axios
+            .get(
+                `${APIurl}/api/v1/users/songs/favorites/search?pageNo=${page}&${searchBy}=${input}&sortField=${sortBy}&direction=${sortDirection}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                    },
+                }
+            )
+            .then((res) => {
+                if (page === 0) {
+                    setSongs([]);
+                }
+                if (res.data.data.length !== 0) {
+                    setSongs((prevSongs) => [
+                        ...prevSongs,
+                        ...res.data.data,
+                    ]);
+                    searchSongsPaging(input, page + 1);
+                } else {
+                    setIsLoading(false);
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                setIsLoading(false);
+                failedNotification(err.response.data.msg);
+            });
+    };
+
     const searchFilter = (e) => {
         const inputFiltered = e.target.value.replace(/[|{}\\[\]^`"<>]/g, "");
         setSearchValue(inputFiltered);
-        if (!inputFiltered) {
-            getFavoriteSongs();
-            return;
+
+        if (timeoutId) {
+            clearTimeout(timeoutId); // Clear the previous timeout
         }
 
-        const searchSongsPaging = (page = 0) => {
-            axios
-                .get(
-                    `${APIurl}/api/v1/users/songs/favorites/search?pageNo=${page}&${searchBy}=${inputFiltered}&sortField=${sortBy}&direction=${sortDirection}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${tokenData.token}`,
-                        },
-                    }
-                )
-                .then((res) => {
-                    if (page === 0) {
-                        setSongs([]);
-                    }
-                    if (res.data.data.length !== 0) {
-                        setSongs((prevSongs) => [
-                            ...prevSongs,
-                            ...res.data.data,
-                        ]);
-                        searchSongsPaging(page + 1);
-                    } else {
-                        setIsLoading(false);
-                    }
-                })
-                .catch((err) => {
-                    console.log(err);
-                    setIsLoading(false);
-                    failedNotification(err.response.data.msg);
-                });
-        };
+        const newTimeoutId = setTimeout(() => {
+            if (!inputFiltered) {
+                searchSongsPaging(inputFiltered);
+                return;
+            }
 
-        searchSongsPaging();
+            searchSongsPaging(inputFiltered);
+        }, 500); // Delay 0.5s
+
+        setTimeoutId(newTimeoutId);
     };
 
     let songlistHTML;

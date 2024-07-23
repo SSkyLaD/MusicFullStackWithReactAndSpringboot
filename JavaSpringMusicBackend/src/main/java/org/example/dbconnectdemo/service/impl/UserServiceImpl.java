@@ -19,8 +19,8 @@ import org.example.dbconnectdemo.model.User;
 import org.example.dbconnectdemo.repository.SongListRepository;
 import org.example.dbconnectdemo.repository.SongRepository;
 import org.example.dbconnectdemo.repository.UserRepository;
-import org.example.dbconnectdemo.service.Utility;
 import org.example.dbconnectdemo.service.UserService;
+import org.example.dbconnectdemo.spring_security.ApplicationConfig;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
@@ -49,6 +49,7 @@ import static org.apache.catalina.startup.ExpandWar.deleteDir;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
+    private final ApplicationConfig applicationConfig;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final SongRepository songRepository;
@@ -83,7 +84,7 @@ public class UserServiceImpl implements UserService {
             throw new UsernameAlreadyExistException("Username already exist");
         }
 
-        File userDir = new File(Utility.STATIC_FILE_URL + userDto.getUsername());
+        File userDir = new File(applicationConfig.getStaticFileUrl() + userDto.getUsername());
         if (!userDir.exists()) {
             if(!userDir.mkdir()){
                 throw new RuntimeException("Create directory failed");
@@ -120,16 +121,6 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteUserByUsername(username);
     }
 
-    @Override
-    public List<SongDto> getAllUserSongs(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        List<Song> songs = songRepository.findByUserOwnerId(user.getId()); //List<Song> songs = user.getUserSongs();
-        List<SongDto> songsdto = new ArrayList<>();
-        for (Song song : songs) {
-            songsdto.add(SongMapper.mapToSongDto(song));
-        }
-        return songsdto;
-    }
 
 
     @Override
@@ -143,7 +134,6 @@ public class UserServiceImpl implements UserService {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).descending());
         }
         List<Song> songs = songRepository.findAllByUserOwnerId(user.getId(), paging);
-        Utility.sortSongs(songs, field, direction);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
@@ -187,16 +177,6 @@ public class UserServiceImpl implements UserService {
         return songsDto;
     }
 
-    @Override
-    public List<SongDto> searchAllUserSongsLikeName(String username, String name) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndNameContaining(user.getId(),name);
-        List<SongDto> songsDto = new ArrayList<>();
-        for (Song aSong : songs) {
-            songsDto.add(SongMapper.mapToSongDto(aSong));
-        }
-        return songsDto;
-    }
 
 
     @Override
@@ -209,16 +189,6 @@ public class UserServiceImpl implements UserService {
         return song;
     }
 
-    @Override
-    public List<SongDto> getAllUserFavoriteSongs(String username) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        List<Song> favoriteSongs = songRepository.findByUserOwnerIdAndFavorite(user.getId(), true);
-        List<SongDto> favoriteSongsDto = new ArrayList<>();
-        for (Song song : favoriteSongs) {
-            favoriteSongsDto.add(SongMapper.mapToSongDto(song));
-        }
-        return favoriteSongsDto;
-    }
 
     @Override
     public List<SongDto> getAllUserFavoriteSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
@@ -275,17 +245,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<SongDto> searchAllUserFavoriteSongsLikeName(String username, String name) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndNameContaining(user.getId(),true,name);
-        List<SongDto> songsDto = new ArrayList<>();
-        for (Song aSong : songs) {
-            songsDto.add(SongMapper.mapToSongDto(aSong));
-        }
-        return songsDto;
-    }
-
-    @Override
     public SongDto updateUserFavoriteSong(String username, Long songId, boolean isFavorite) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         for (Song song : user.getUserSongs()) {
@@ -299,89 +258,19 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void addSongToUser(String username, MultipartFile file) throws IOException, CannotReadException, TagException, InvalidAudioFrameException, ReadOnlyFileException {
+    public List<SongDto> addSongsToUser(String username, MultipartFile[] files) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         List<String> allowFileType = new ArrayList<>();
         allowFileType.add("audio/flac");
         allowFileType.add("audio/x-flac");
         allowFileType.add("audio/mpeg");
-        String extension = FilenameUtils.getExtension(file.getOriginalFilename());
-        if ((!Objects.equals(extension, "flac") && !Objects.equals(extension, "mp3")) || extension.isEmpty()) {
-            throw new InvalidInputException("Invalid file type");
-        }
-        if (!allowFileType.contains(file.getContentType())) {
-            throw new InvalidInputException("Invalid file type");
-        }
-        if (file.getSize() > user.getAvailableMemory()) {
-            throw new InvalidInputException("Memory limit exceeded");
-        }
-        Song song = new Song();
-        song.setFileName(file.getOriginalFilename());
-        String fileUrl = user.getUserDir() + "\\" + System.currentTimeMillis() + "-" + file.getOriginalFilename();
-        song.setFileUrl(fileUrl);
-        file.transferTo(new File(fileUrl));
-        song.setSize(file.getSize());
-
-        AudioFile audioFile = AudioFileIO.read(new File(fileUrl));
-        AudioHeader audioHeader = audioFile.getAudioHeader();
-        Tag tag = audioFile.getTag();
-
-        String[] filenameSplit = Objects.requireNonNull(file.getOriginalFilename()).split("-");
-        String title = filenameSplit[filenameSplit.length - 1];
-        StringBuilder artist = new StringBuilder();
-        title = title.replaceAll("\\.(flac|mp3)$", "").trim();
-
-        for (int i = 0; i < filenameSplit.length - 1; i++) {
-            artist.append(filenameSplit[i]).append(" ");
-        }
-        artist = new StringBuilder(artist.toString().trim());
-
-        song.setName(title);
-        song.setArtist(artist.toString());
-
-        if (tag != null) {
-            if (!tag.getFirst(FieldKey.TITLE).isEmpty()) {
-                song.setName(tag.getFirst(FieldKey.TITLE));
-            }
-            if (!tag.getFirst(FieldKey.ARTIST).isEmpty()) {
-                song.setArtist(tag.getFirst(FieldKey.ARTIST));
-            }
-            song.setAlbum(tag.getFirst(FieldKey.ALBUM));
-            song.setReleaseDate(tag.getFirst(FieldKey.YEAR));
-            Artwork artwork = tag.getFirstArtwork();
-            if (artwork != null) {
-                byte[] imageBytes = artwork.getBinaryData();
-                song.setAlbumImageBase64("data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes));
-            }
-        }
-        song.setDuration(audioHeader.getTrackLength());
-
-
-
-        user.getUserSongs().add(song);
-        user.setSumOfSongs(user.getUserSongs().size());
-        if (!user.getRole().equals(Role.ADMIN)) {
-            user.setAvailableMemory(user.getAvailableMemory() - song.getSize());
-        }
-        userRepository.save(user);
-    }
-
-    @Override
-    public List<String> addSongsToUser(String username, MultipartFile[] files) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        List<String> allowFileType = new ArrayList<>();
-        allowFileType.add("audio/flac");
-        allowFileType.add("audio/x-flac");
-        allowFileType.add("audio/mpeg");
-        List<String> result = new ArrayList<>();
+        List<SongDto> addedSong = new ArrayList<>();
         for (MultipartFile file : files) {
             String extension = FilenameUtils.getExtension(file.getOriginalFilename());
             if ((!Objects.equals(extension, "flac") && !Objects.equals(extension, "mp3")) || extension.isEmpty()) {
-                result.add("File " + file.getOriginalFilename() + " is invalid");
                 continue;
             }
             if (!allowFileType.contains(file.getContentType())) {
-                result.add("File " + file.getOriginalFilename() + " is invalid");
                 continue;
             }
             if (file.getSize() > user.getAvailableMemory()) {
@@ -427,18 +316,16 @@ public class UserServiceImpl implements UserService {
                 }
             }
             song.setDuration(audioHeader.getTrackLength());
-
-            System.out.print(song.getArtist() + " " + song.getName() + " " + song.getFileUrl());
-
-
-            user.getUserSongs().add(song);
+            song.setUserOwnerId(user.getId());
+            Song savedSong = songRepository.save(song);
+            addedSong.add(SongMapper.mapToSongDto(savedSong));
             user.setSumOfSongs(user.getSumOfSongs() + 1);
             if (!user.getRole().equals(Role.ADMIN)) {
                 user.setAvailableMemory(user.getAvailableMemory() - song.getSize());
             }
-            userRepository.save(user);
         }
-        return result;
+        userRepository.save(user);
+        return addedSong;
     }
 
     @Override
@@ -554,6 +441,7 @@ public class UserServiceImpl implements UserService {
             throw new InvalidInputException("Song not found");
         }
         if(!songList.getSongs().contains(song)){
+            songList.setSumOfSongs(songList.getSongs().size() + 1);
             songList.getSongs().add(song);
             songlistRepository.save(songList);
             return "Song " + song.getArtist() + " - " + song.getName() + " added to " + songList.getName() + " successfully";
@@ -572,6 +460,7 @@ public class UserServiceImpl implements UserService {
         if(song == null){
             throw new InvalidInputException("Song not found");
         }
+        songList.setSumOfSongs(songList.getSongs().size() - 1);
         songList.getSongs().remove(song);
         songlistRepository.save(songList);
         return "Song " + song.getArtist() + " - " + song.getName() + " removed from " + songList.getName() + " successfully";

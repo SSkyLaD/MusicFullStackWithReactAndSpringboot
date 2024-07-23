@@ -32,9 +32,8 @@ MusicCard.propTypes = {
         albumImageBase64: PropTypes.string.isRequired,
         favorite: PropTypes.bool.isRequired,
     }).isRequired,
-    getSongs: PropTypes.func,
-    getFavoriteSongs: PropTypes.func,
     controlRender: PropTypes.func,
+    playlistId : PropTypes.number
 };
 
 export default function MusicCard({ songData, controlRender, playlistId }) {

@@ -1,5 +1,6 @@
 package org.example.dbconnectdemo;
 import lombok.AllArgsConstructor;
+import org.example.dbconnectdemo.service.Utility;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 

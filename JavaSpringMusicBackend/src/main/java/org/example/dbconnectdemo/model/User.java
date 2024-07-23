@@ -29,7 +29,6 @@ public class User extends AppUser {
     private int sumOfSongs = 0;
 
     @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_owner_id", referencedColumnName = "id")
     private List<Song> userSongs = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL)

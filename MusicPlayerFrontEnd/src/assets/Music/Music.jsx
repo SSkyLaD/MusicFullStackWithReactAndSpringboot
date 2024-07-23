@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import "./Music.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,22 +11,23 @@ import { TokenContext } from "../../pages/UserPage/user";
 import { successNotification, failedNotification } from "../notification";
 import Empty from "../Empty/empty";
 import MusicCard from "../MusicCard/MusicCard";
-import Loading from "../Loading/Loading"
+import Loading from "../Loading/Loading";
 
 const APIurl = import.meta.env.VITE_APIServerUrl;
 
 export default function Music() {
     const { tokenData, handlePlayAll } = React.useContext(TokenContext);
-    const [songs, setSongs] = React.useState([]);
-    const [showFilter, setShowFilter] = React.useState(false);
-    const [uploadedFiles, setUploadedFiles] = React.useState(null);
-    const [isLoading, setIsLoading] = React.useState(false);
-    const [searchBy, setSearchBy] = React.useState("name");
-    const [sortBy, setSortBy] = React.useState("uploadDate");
-    const [sortDirection, setSortDirection] = React.useState("asc");
-    const [searchValue, setSearchValue] = React.useState("");
-    const inputFileRef = React.useRef(null);
-    const filterRef = React.useRef(null);
+    const [songs, setSongs] = useState([]);
+    const [showFilter, setShowFilter] = useState(false);
+    const [uploadedFiles, setUploadedFiles] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [searchBy, setSearchBy] = useState("name");
+    const [sortBy, setSortBy] = useState("uploadDate");
+    const [sortDirection, setSortDirection] = useState("asc");
+    const [searchValue, setSearchValue] = useState("");
+    const [timeoutId, setTimeoutId] = useState(null); // State to store the timeout ID
+    const inputFileRef = useRef(null);
+    const filterRef = useRef(null);
 
     const getSongsPaging = (page = 0) => {
         setIsLoading(true);
@@ -81,12 +82,11 @@ export default function Music() {
                     Authorization: `Bearer ${tokenData.token}`,
                 },
             })
-            .then(() => {
+            .then((res) => {
                 successNotification("File uploaded successfully");
                 setUploadedFiles(null);
                 inputFileRef.current.value = null;
-                setSongs([]); // Clear the current songs before fetching again
-                getSongsPaging(); // Fetch songs from page 0
+                setSongs((prev)=>[...prev,...res.data.data]); // Clear the current songs before fetching again
             })
             .catch((err) => {
                 failedNotification(err.response.data.msg);
@@ -96,47 +96,56 @@ export default function Music() {
             });
     };
 
-    const searchFilter = (e) => {
+    const searchSongsPaging = (inputFiltered, page = 0) => {
+        setIsLoading(true);
+        axios
+            .get(
+                `${APIurl}/api/v1/users/songs/search?pageNo=${page}&${searchBy}=${inputFiltered}&sortField=${sortBy}&direction=${sortDirection}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                    },
+                }
+            )
+            .then((res) => {
+                if (page === 0) {
+                    setSongs([]);
+                }
+                if (res.data.data.length !== 0) {
+                    setSongs((prevSongs) => [
+                        ...prevSongs,
+                        ...res.data.data,
+                    ]);
+                    searchSongsPaging(inputFiltered, page + 1);
+                } else {
+                    setIsLoading(false);
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                setIsLoading(false);
+                failedNotification(err.response.data.msg);
+            });
+    };
+
+    const handleSearchChange = (e) => {
         const inputFiltered = e.target.value.replace(/[|{}\\[\]^`"<>]/g, "");
         setSearchValue(inputFiltered);
-        if (!inputFiltered) {
-            getSongsPaging();
-            return;
+
+        if (timeoutId) {
+            clearTimeout(timeoutId); // Clear the previous timeout
         }
 
-        const searchSongsPaging = (page = 0) => {
-            setIsLoading(true);
-            axios
-                .get(
-                    `${APIurl}/api/v1/users/songs/search?pageNo=${page}&${searchBy}=${inputFiltered}&sortField=${sortBy}&direction=${sortDirection}`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${tokenData.token}`,
-                        },
-                    }
-                )
-                .then((res) => {
-                    if (page === 0) {
-                        setSongs([]);
-                    }
-                    if (res.data.data.length != 0) {
-                        setSongs((prevSongs) => [
-                            ...prevSongs,
-                            ...res.data.data,
-                        ]);
-                        searchSongsPaging(page + 1);
-                    } else {
-                        setIsLoading(false);
-                    }
-                })
-                .catch((err) => {
-                    console.log(err);
-                    setIsLoading(false);
-                    failedNotification(err.response.data.msg);
-                });
-        };
+        const newTimeoutId = setTimeout(() => {
+            if (!inputFiltered) {
+                getSongsPaging();
+                return;
+            }
 
-        searchSongsPaging();
+            searchSongsPaging(inputFiltered);
+        }, 500); // Delay 0.5s
+
+        setTimeoutId(newTimeoutId);
     };
 
     let songlistHTML;
@@ -153,11 +162,11 @@ export default function Music() {
         });
     }
 
-    React.useEffect(() => {
+    useEffect(() => {
         getSongsPaging();
     }, [sortBy, sortDirection]);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const handler = (e) => {
             if (filterRef.current && !filterRef.current.contains(e.target)) {
                 setShowFilter(false);
@@ -180,7 +189,7 @@ export default function Music() {
                             <p>Play all</p>
                         </button>
                         <p>{songs.length}</p>
-                        {isLoading ? <Loading/> : ""}
+                        {isLoading ? <Loading /> : ""}
                     </div>
                 </div>
                 <div className="search">
@@ -189,7 +198,7 @@ export default function Music() {
                         id="search-input"
                         placeholder="Search here..."
                         value={searchValue}
-                        onChange={searchFilter}
+                        onChange={handleSearchChange} // Use handleSearchChange
                     ></input>
                     <div className="search-icon">
                         <FontAwesomeIcon icon={faMagnifyingGlass} />
@@ -287,7 +296,7 @@ export default function Music() {
                                     Duration
                                 </div>
                             </div>
-                            <h3>Direction</h3>
+                            <h3>Sort Direction</h3>
                             <div className="button-container">
                                 <div
                                     style={{
@@ -298,7 +307,7 @@ export default function Music() {
                                     }}
                                     onClick={() => setSortDirection("asc")}
                                 >
-                                    A-Z
+                                    Ascending
                                 </div>
                                 <div
                                     style={{
@@ -309,7 +318,7 @@ export default function Music() {
                                     }}
                                     onClick={() => setSortDirection("desc")}
                                 >
-                                    Z-A
+                                    Descending
                                 </div>
                             </div>
                         </div>
