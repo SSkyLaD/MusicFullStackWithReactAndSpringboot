@@ -13,7 +13,6 @@ import java.util.List;
 @MappedSuperclass
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class AppUser implements UserDetails {
 
     @Id

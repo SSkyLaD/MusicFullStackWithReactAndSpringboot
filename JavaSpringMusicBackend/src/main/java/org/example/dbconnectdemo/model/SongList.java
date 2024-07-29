@@ -1,22 +1,19 @@
 package org.example.dbconnectdemo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+//TODO Remake entity relationship 2023-07-23
 @Entity
 @Table(name = "SONGLISTS")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class SongList{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +36,7 @@ public class SongList{
             columnNames = {"songlist_id", "song_id"})})
     private List<Song> songs = new ArrayList<>();
 
+    @JsonBackReference
     @Column(name = "user_owner_id")
     private Long userOwnerId;
 }

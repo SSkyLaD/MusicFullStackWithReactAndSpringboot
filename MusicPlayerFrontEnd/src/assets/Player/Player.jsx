@@ -16,7 +16,7 @@ import { notification } from "../notification";
 const api = import.meta.env.VITE_APIServerUrl;
 
 export default function Player() {
-    const {tokenData, playSong, tracklist, tracklistIndex, setPlaySong } =
+    const { tokenData, playSong, tracklist, tracklistIndex, setPlaySong } =
         React.useContext(TokenContext);
     const [playerData, setPlayerData] = React.useState({
         nowtimeInSec: 0,
@@ -30,6 +30,7 @@ export default function Player() {
     const audioRef = React.useRef(null);
 
     const play = () => {
+        navigator.mediaSession.playbackState = "playing";
         notification(`▶ Now playing : ${playSong.name} - ${playSong.artist}`);
         const song = document.querySelector(".song");
         setPlayerData((prev) => {
@@ -39,6 +40,7 @@ export default function Player() {
     };
 
     const pause = () => {
+        navigator.mediaSession.playbackState = "paused";
         notification(`⏸ Now stopping : ${playSong.name} - ${playSong.artist}`);
         const song = document.querySelector(".song");
         setPlayerData((prev) => {
@@ -184,7 +186,9 @@ export default function Player() {
     // khi playSong thay đổi thì bài hát tự động được nạp vào player và chạy
     React.useEffect(() => {
         if (playSong.id != "") {
-            document.querySelector(".song").src = `${api}/api/v1/users/songs/stream/${tokenData.token}/${playSong.id}`
+            document.querySelector(
+                ".song"
+            ).src = `${api}/api/v1/users/songs/stream/${tokenData.token}/${playSong.id}`;
             setPlayerData((prev) => {
                 return { ...prev, isPlayed: true };
             });
@@ -192,32 +196,35 @@ export default function Player() {
     }, [playSong]);
 
     React.useEffect(() => {
-        if ('mediaSession' in navigator) {
-          navigator.mediaSession.setActionHandler('play', () => {
-            play()
-          });
-    
-          navigator.mediaSession.setActionHandler('pause', () => {
-            pause()
-          });
-    
-          navigator.mediaSession.setActionHandler('previoustrack', () => {
-            handleSkipSong()
-          });
-    
-          navigator.mediaSession.setActionHandler('nexttrack', () => {
-            handleBackSong()
-          });
-          navigator.mediaSession.metadata = new window.MediaMetadata({
-            title: playSong.name,
-            artist: playSong.artist,
-            artwork: [
-              { src: playSong.albumImageBase64, sizes: '96x96', type: 'image/jpeg' },
-            ],
-          });
-        }
-      }, []);
+        if ("mediaSession" in navigator) {
+            navigator.mediaSession.setActionHandler("play", () => {
+                play();
+            });
 
+            navigator.mediaSession.setActionHandler("pause", () => {
+                pause();
+            });
+
+            navigator.mediaSession.setActionHandler("previoustrack", () => {
+                handleBackSong();
+            });
+
+            navigator.mediaSession.setActionHandler("nexttrack", () => {
+                handleSkipSong();
+            });
+            navigator.mediaSession.metadata = new window.MediaMetadata({
+                title: playSong.name,
+                artist: playSong.artist,
+                artwork: [
+                    {
+                        src: playSong.albumImageBase64,
+                        sizes: "96x96",
+                        type: "image/jpeg",
+                    },
+                ],
+            });
+        }
+    }, []);
 
     return (
         <div className="player">

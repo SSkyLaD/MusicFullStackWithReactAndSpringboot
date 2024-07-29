@@ -1,10 +1,8 @@
 package org.example.dbconnectdemo.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.util.ArrayList;
@@ -12,10 +10,9 @@ import java.util.Date;
 import java.util.List;
 
 
+//TODO Remake entity relationship 2023-07-23
 @Entity
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
 @Table(name = "SONGS")
 public class Song {
@@ -52,6 +49,7 @@ public class Song {
     @ManyToMany(mappedBy = "songs", fetch = FetchType.EAGER)
     private List<SongList> songLists;
 
+    @JsonBackReference
     @Column(name = "user_owner_id")
     private Long userOwnerId;
 }

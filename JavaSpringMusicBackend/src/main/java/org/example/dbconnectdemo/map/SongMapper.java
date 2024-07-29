@@ -2,7 +2,9 @@ package org.example.dbconnectdemo.map;
 
 import org.example.dbconnectdemo.dto.SongDto;
 import org.example.dbconnectdemo.model.Song;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SongMapper {
     public static SongDto mapToSongDto(Song song) {
         SongDto songDto = new SongDto();

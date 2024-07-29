@@ -7,5 +7,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SongListRepository extends JpaRepository<SongList, Long> {
+    SongList findByName(String name);
+
     SongList findByUserOwnerIdAndId(Long UserOwnerId, Long Id);
 }

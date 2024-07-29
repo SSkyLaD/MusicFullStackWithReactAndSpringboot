@@ -37,12 +37,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
+
 import static org.apache.catalina.startup.ExpandWar.deleteDir;
 
 @Service
@@ -54,6 +56,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final SongRepository songRepository;
     private final SongListRepository songlistRepository;
+    private final SongMapper songMapper;
 
     @Override
     public void createUser(UserDto userDto) {
@@ -61,7 +64,7 @@ public class UserServiceImpl implements UserService {
         if (userDto.getUsername() == null || userDto.getUsername().isEmpty()) {
             throw new InvalidInputException("Username cannot be blank");
         }
-        if(!userDto.getUsername().matches(USERNAME_PATTERN)){
+        if (!userDto.getUsername().matches(USERNAME_PATTERN)) {
             throw new InvalidInputException("Username invalid");
         }
         if (userDto.getEmail() == null || userDto.getEmail().isEmpty()) {
@@ -77,7 +80,7 @@ public class UserServiceImpl implements UserService {
         if (userDto.getPassword().length() < 6) {
             throw new InvalidInputException("Password must be at least 6 characters");
         }
-        if(userDto.getPassword().length() > 50){
+        if (userDto.getPassword().length() > 50) {
             throw new InvalidInputException("Password must be less than 50 character");
         }
         if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
@@ -86,7 +89,7 @@ public class UserServiceImpl implements UserService {
 
         File userDir = new File(applicationConfig.getStaticFileUrl() + userDto.getUsername());
         if (!userDir.exists()) {
-            if(!userDir.mkdir()){
+            if (!userDir.mkdir()) {
                 throw new RuntimeException("Create directory failed");
             }
         }
@@ -115,22 +118,21 @@ public class UserServiceImpl implements UserService {
                 deleteDir(f);
             }
         }
-        if(!userDir.delete()){
+        if (!userDir.delete()) {
             throw new RuntimeException("Delete directory failed");
         }
         userRepository.deleteUserByUsername(username);
     }
 
 
-
     @Override
     public List<SongDto> getAllUserSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
-        if(Objects.equals(direction, "asc")){
+        if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).ascending());
         }
-        if(Objects.equals(direction, "desc")){
+        if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).descending());
         }
         List<Song> songs = songRepository.findAllByUserOwnerId(user.getId(), paging);
@@ -142,16 +144,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<SongDto> searchAllUserSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize,String sortField,String direction, String name) {
+    public List<SongDto> searchAllUserSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
-        if(Objects.equals(direction, "asc")){
+        if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
         }
-        if(Objects.equals(direction, "desc")){
+        if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
         }
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndNameContaining(user.getId(),name,paging);
+        List<Song> songs = songRepository.findAllByUserOwnerIdAndNameContaining(user.getId(), name, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
@@ -163,20 +165,19 @@ public class UserServiceImpl implements UserService {
     public List<SongDto> searchAllUserSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
-        if(Objects.equals(direction, "asc")){
+        if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
         }
-        if(Objects.equals(direction, "desc")){
+        if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
         }
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndArtistContaining(user.getId(),artist,paging);
+        List<Song> songs = songRepository.findAllByUserOwnerIdAndArtistContaining(user.getId(), artist, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
         }
         return songsDto;
     }
-
 
 
     @Override
@@ -194,13 +195,13 @@ public class UserServiceImpl implements UserService {
     public List<SongDto> getAllUserFavoriteSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
-        if(Objects.equals(direction, "asc")){
+        if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).ascending());
         }
-        if(Objects.equals(direction, "desc")){
+        if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).descending());
         }
-        List<Song> favoriteSongs = songRepository.findAllByUserOwnerIdAndFavorite(user.getId(),true,paging);
+        List<Song> favoriteSongs = songRepository.findAllByUserOwnerIdAndFavorite(user.getId(), true, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : favoriteSongs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
@@ -209,16 +210,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<SongDto> searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize,String sortField,String direction, String name) {
+    public List<SongDto> searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
-        if(Objects.equals(direction, "asc")){
+        if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
         }
-        if(Objects.equals(direction, "desc")){
+        if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
         }
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndNameContaining(user.getId(),true,name,paging);
+        List<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndNameContaining(user.getId(), true, name, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
@@ -230,13 +231,13 @@ public class UserServiceImpl implements UserService {
     public List<SongDto> searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
-        if(Objects.equals(direction, "asc")){
+        if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
         }
-        if(Objects.equals(direction, "desc")){
+        if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
         }
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndArtistContaining(user.getId(),true,artist,paging);
+        List<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndArtistContaining(user.getId(), true, artist, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
@@ -247,14 +248,12 @@ public class UserServiceImpl implements UserService {
     @Override
     public SongDto updateUserFavoriteSong(String username, Long songId, boolean isFavorite) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        for (Song song : user.getUserSongs()) {
-            if (songId.equals(song.getId())) {
-                song.setFavorite(isFavorite);
-                userRepository.save(user);
-                return SongMapper.mapToSongDto(song);
-            }
+        Song song = songRepository.findByIdAndUserOwnerId(songId, user.getId());
+        if (song == null) {
+            throw new ResourceNotFoundException("Cannot find song");
         }
-        throw new ResourceNotFoundException("Cannot find song");
+        song.setFavorite(isFavorite);
+        return SongMapper.mapToSongDto(songRepository.save(song));
     }
 
     @Override
@@ -331,44 +330,43 @@ public class UserServiceImpl implements UserService {
     @Override
     public SongDto deleteSongFromUser(String username, Long id) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        Song song = songRepository.findByIdAndUserOwnerId(id, user.getId());
+        if (song == null) {
+            throw new ResourceNotFoundException("Cannot find song");
+        }
         List<Song> songs = user.getUserSongs();
-        for (Song song : songs) {
-            if (song.getId().equals(id)) {
-                for (SongList list : user.getUserSongLists()) {
-                    if (list.getSongs().contains(song)) {
-                        list.setSumOfSongs(list.getSumOfSongs() - 1);
-                        list.getSongs().remove(song);
-                        break;
-                    }
-                }
-                File songFile = new File(song.getFileUrl());
-                user.setSumOfSongs(user.getSumOfSongs() - 1);
-                user.setAvailableMemory(user.getAvailableMemory() + song.getSize());
-                if(!songFile.delete()){
-                    throw new RuntimeException("File delete failed");
-                }
-                songs.remove(song);
-                songRepository.deleteById(id);
-                user.setUserSongs(songs);
-                userRepository.save(user);
-                return SongMapper.mapToSongDto(song);
+
+        for (SongList list : user.getUserSongLists()) {
+            if (list.getSongs().contains(song)) {
+                list.setSumOfSongs(list.getSumOfSongs() - 1);
+                list.getSongs().remove(song);
+                break;
             }
         }
-        throw new ResourceNotFoundException("Cannot find song");
+        File songFile = new File(song.getFileUrl());
+        user.setSumOfSongs(user.getSumOfSongs() - 1);
+        user.setAvailableMemory(user.getAvailableMemory() + song.getSize());
+        if (!songFile.delete()) {
+            throw new RuntimeException("File delete failed");
+        }
+        songs.remove(song);
+        songRepository.deleteById(id);
+        user.setUserSongs(songs);
+        userRepository.save(user);
+        return SongMapper.mapToSongDto(song);
+
     }
 
     @Override
     public void createUserCustomList(String username, String listName) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        if(user.getUserSongLists().size() >=5){
+        if (user.getUserSongLists().size() >= 5) {
             throw new InvalidInputException("Playlist limit is 5");
         }
-        SongList newList = new SongList(listName.trim());
-        for (SongList list : user.getUserSongLists()) {
-            if (list.getName().equals(listName)) {
-                throw new InvalidInputException("Playlist " + listName + " already exists");
-            }
+        if(songlistRepository.findByName(listName) != null){
+            throw new InvalidInputException("Playlist " + listName + " already exists");
         }
+        SongList newList = new SongList(listName.trim());
         user.getUserSongLists().add(newList);
         userRepository.save(user);
     }
@@ -386,78 +384,70 @@ public class UserServiceImpl implements UserService {
     @Override
     public SongList getUserCustomList(String username, Long id) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        for (SongList songList : user.getUserSongLists()) {
-            if (songList.getId().equals(id)) {
-                return songList;
-            }
+        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(),id);
+        if(songList == null){
+            throw new ResourceNotFoundException("Playlist not found");
         }
-        throw new ResourceNotFoundException("Playlist not found");
+        return songList;
     }
 
     @Override
     public SongList deleteUserCustomList(String username, Long id) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        for (SongList songList : user.getUserSongLists()) {
-            if (songList.getId().equals(id)) {
-                user.getUserSongLists().remove(songList);
-                songlistRepository.deleteById(id);
-                userRepository.save(user);
-                return songList;
-            }
+        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(),id);
+        if(songList == null){
+            throw new ResourceNotFoundException("Playlist not found");
         }
-        throw new ResourceNotFoundException("Playlist not found");
+        songlistRepository.delete(songList);
+        return songList;
     }
 
     @Override
     public SongList updateUserCustomList(String username, Long id, String listName) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        for (SongList list : user.getUserSongLists()) {
-            if(list.getName().equals(listName)){
-                throw new InvalidInputException("Playlist name already exists");
-            }
+        if(songlistRepository.findByName(listName) != null){
+            throw new InvalidInputException("Playlist name already exists");
         }
-        for (SongList list : user.getUserSongLists()) {
-            if (list.getId().equals(id)) {
-                list.setName(listName);
-                userRepository.save(user);
-                return list;
-            }
+        SongList updateSongList = songlistRepository.findByUserOwnerIdAndId(user.getId(),id);
+        if(updateSongList == null){
+            throw new ResourceNotFoundException("Playlist not found");
         }
-        throw new ResourceNotFoundException("Playlist not found");
+        updateSongList.setName(listName);
+        return songlistRepository.save(updateSongList);
     }
 
     @Override
     public String addSongToCustomList(String username, Long listId, Long songId) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(),listId);
-        if(songList == null){
+        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(), listId);
+        if (songList == null) {
             throw new InvalidInputException("Playlist not found");
         }
-        if(songList.getSumOfSongs() >= 30){
+        if (songList.getSumOfSongs() >= 30) {
             throw new InvalidInputException("Playlist limit is 30");
         }
-        Song song = songRepository.findByIdAndUserOwnerId(songId,user.getId());
-        if(song == null){
+        Song song = songRepository.findByIdAndUserOwnerId(songId, user.getId());
+        if (song == null) {
             throw new InvalidInputException("Song not found");
         }
-        if(!songList.getSongs().contains(song)){
-            songList.setSumOfSongs(songList.getSongs().size() + 1);
-            songList.getSongs().add(song);
-            songlistRepository.save(songList);
-            return "Song " + song.getArtist() + " - " + song.getName() + " added to " + songList.getName() + " successfully";
+        if (songList.getSongs().contains(song)) {
+            throw new InvalidInputException("Song " + song.getArtist() + " - " + song.getName() + " already in " + songList.getName());
         }
-        throw new InvalidInputException("Song " + song.getArtist() + " - " + song.getName() + " already in " + songList.getName());
+        songList.setSumOfSongs(songList.getSongs().size() + 1);
+        songList.getSongs().add(song);
+        songlistRepository.save(songList);
+        return "Song " + song.getArtist() + " - " + song.getName() + " added to " + songList.getName() + " successfully";
     }
 
     @Override
     public String removeSongFromCustomList(String username, Long listId, Long songId) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(),listId);
-        if(songList == null){
+        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(), listId);
+        if (songList == null) {
             throw new InvalidInputException("Playlist not found");
         }
-        Song song = songRepository.findByIdAndUserOwnerId(songId,user.getId());
-        if(song == null){
+        Song song = songRepository.findByIdAndUserOwnerId(songId, user.getId());
+        if (song == null) {
             throw new InvalidInputException("Song not found");
         }
         songList.setSumOfSongs(songList.getSongs().size() - 1);
