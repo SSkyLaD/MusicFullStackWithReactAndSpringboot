@@ -7,7 +7,7 @@ import {
     faPlay,
     faFilter,
 } from "@fortawesome/free-solid-svg-icons";
-import { TokenContext } from "../../pages/UserPage/user";
+import { TokenContext } from "../../pages/MainUserPage/user";
 import { successNotification, failedNotification } from "../notification";
 import Empty from "../Empty/empty";
 import MusicCard from "../MusicCard/MusicCard";
@@ -86,7 +86,7 @@ export default function Music() {
                 successNotification("File uploaded successfully");
                 setUploadedFiles(null);
                 inputFileRef.current.value = null;
-                setSongs((prev)=>[...prev,...res.data.data]); // Clear the current songs before fetching again
+                setSongs((prev) => [...prev, ...res.data.data]); // Clear the current songs before fetching again
             })
             .catch((err) => {
                 failedNotification(err.response.data.msg);
@@ -112,10 +112,7 @@ export default function Music() {
                     setSongs([]);
                 }
                 if (res.data.data.length !== 0) {
-                    setSongs((prevSongs) => [
-                        ...prevSongs,
-                        ...res.data.data,
-                    ]);
+                    setSongs((prevSongs) => [...prevSongs, ...res.data.data]);
                     searchSongsPaging(inputFiltered, page + 1);
                 } else {
                     setIsLoading(false);

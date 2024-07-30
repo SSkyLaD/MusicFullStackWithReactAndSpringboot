@@ -13,7 +13,7 @@ import {
     faEraser,
 } from "@fortawesome/free-solid-svg-icons";
 import "./MusicCard.scss";
-import { TokenContext } from "../../pages/UserPage/user";
+import { TokenContext } from "../../pages/MainUserPage/user";
 import {
     successNotification,
     failedNotification,
@@ -33,7 +33,7 @@ MusicCard.propTypes = {
         favorite: PropTypes.bool.isRequired,
     }).isRequired,
     controlRender: PropTypes.func,
-    playlistId : PropTypes.number
+    playlistId: PropTypes.number,
 };
 
 export default function MusicCard({ songData, controlRender, playlistId }) {

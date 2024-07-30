@@ -1,0 +1,140 @@
+.back-ground {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #272727ff;
+    flex-grow: 1;
+    overflow: auto;
+    color: white;
+    background-image: url('/hill.jpg');
+    background-size: cover;
+    .main-container {
+        margin-bottom: 100px;
+        width: 700px;
+        height: 400px;
+        border-radius: 16px;
+        display: flex;
+        overflow: hidden;
+        flex-shrink: 0;
+
+        .main-left {
+            position: relative;
+            width: 40%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: rgb(39, 38, 38);
+
+            .upload-container{
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                width: 280px;
+                height: 140px;
+                top : 40px;
+                right: -230px;
+                justify-content: space-around;
+                padding: 10px;
+                border-radius: 12px;
+                background-color: black;
+                input{
+                    cursor: pointer;
+                }
+                button{
+                    cursor: pointer;
+                }
+            }
+
+            .edit-pic{
+                position: absolute;
+                right: 20px;
+                top: 20px;
+                cursor: pointer;
+            }
+
+            .ava-container {
+                width: 190px;
+                height: 190px;
+                border: 1px solid white;
+                border-radius: 50%;
+            }
+
+            .username-container {
+                margin-top: 10px;
+                width: 230px;
+                white-space: normal; /* Cho phép xuống dòng */
+                word-wrap: break-word; /* Hỗ trợ trình duyệt cũ */
+                overflow-wrap: break-word; /* Hỗ trợ trình duyệt mới */
+                h3 {
+                    text-align: center;
+                }
+            }
+        }
+
+        .main-right {
+            flex-grow: 1;
+            height: 100%;
+            padding: 25px;
+            background-color: #2b2b2bff;
+            display: flex;
+            flex-direction: column;
+
+            h2 {
+                margin-bottom: 10px;
+            }
+
+            ul {
+                list-style: none;
+                li {
+                    padding-bottom: 6px;
+
+                    p {
+                        margin-left: 10px;
+                        width: 100%;
+                        white-space: normal; /* Cho phép xuống dòng tự động */
+                        word-wrap: break-word; /* Tự động xuống dòng khi cần thiết */
+                        color: rgb(155, 152, 152);
+                    }
+                }
+            }
+
+            .memory-bar{
+                height: 2px;
+                border-radius: 2px;
+                background-color: white;
+            }
+
+            .memory-progress{
+                height: 2px;
+                background-color: red;
+            }
+
+            .right-bot {
+                margin-top: 40px;
+                display: flex;
+                justify-content: flex-end;
+                .delete-acc {
+                    display: flex;
+                    justify-content: center;
+                    align-self: center;
+                    padding: 2px 5px 2px 5px;
+                    border: none;
+                    border-radius: 5px;
+                    background-color: red;
+                    cursor: pointer;
+                    color: white;
+                    transition: 0.5s;
+                    p {
+                        padding-left: 3px;
+                    }
+                }
+
+                .delete-acc:hover {
+                    box-shadow: 0px 0px 5px rgba(255, 0, 0, 1), 0px 0px 25px rgba(255, 0, 0, 1);;
+                }
+            }
+        }
+    }
+}

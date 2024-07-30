@@ -14,9 +14,10 @@ import Home from "../Home/Home";
 import Music from "../Music/Music";
 import Favorite from "../Favorite/Favorite";
 import List from "../List/List";
+import UserProfile from "../UserProfile/UserProfile";
 import CreateListConfirm from "./CreateListConfirm/CreateListConfirm";
 import "./NavBar.scss";
-import { TokenContext } from "../../pages/UserPage/user";
+import { TokenContext } from "../../pages/MainUserPage/user";
 
 NavBar.propTypes = {
     handleLogout: PropTypes.func.isRequired,
@@ -29,20 +30,24 @@ export default function NavBar({
     setMainComponent,
     mainComponent,
 }) {
-    const { tokenData, userLists, getUserLists } =
+    const { tokenData, userLists, getUserLists, avatar, getUserAvatar} =
         React.useContext(TokenContext);
     const [createList, setCreateList] = React.useState(false);
 
+    const navProfile = () => {
+        setMainComponent(<UserProfile key="userProfile" />);
+    };
+
     const navHome = () => {
-        setMainComponent(<Home key ="home"/>);
+        setMainComponent(<Home key="home" />);
     };
 
     const navMusic = () => {
-        setMainComponent(<Music key="music"/>);
+        setMainComponent(<Music key="music" />);
     };
 
     const navFavorite = () => {
-        setMainComponent(<Favorite key = "favorite"/>);
+        setMainComponent(<Favorite key="favorite" />);
     };
 
     const navList = (listName, listId) => {
@@ -74,22 +79,38 @@ export default function NavBar({
 
     React.useEffect(() => {
         if (tokenData.token) {
-            getUserLists(tokenData.token);
+            getUserLists();
+            getUserAvatar();
         }
     }, [tokenData.token]);
 
     return (
         <div className="nav-bar">
             <div className="main-nav">
-                <div className={"button-avatar"}>
-                    <div className="avatar-container">
-                        <FontAwesomeIcon icon={faUser} size="xl" width={25} />
+                <div
+                    className={
+                        mainComponent.key == "userProfile"
+                            ? "button-avatar-selected"
+                            : "button-avatar"
+                    }
+                    onClick={navProfile}
+                >
+                    <div
+                        className="avatar-container"
+                        style={{
+                            backgroundImage: `url(${avatar})`,
+                            backgroundSize: "cover",
+                        }}
+                    >
+                        {avatar ? "" : <FontAwesomeIcon icon={faUser} size="xl" width={25} />}
                     </div>
                     <p>{tokenData.username}</p>
                 </div>
                 <div
                     className={
-                        mainComponent.key == "home" ? "button-selected" : "button"
+                        mainComponent.key == "home"
+                            ? "button-selected"
+                            : "button"
                     }
                     onClick={navHome}
                 >

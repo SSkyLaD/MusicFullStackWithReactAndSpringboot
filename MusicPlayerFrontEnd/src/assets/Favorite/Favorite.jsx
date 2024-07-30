@@ -2,8 +2,12 @@ import "./Favorite.scss";
 import React from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMagnifyingGlass, faPlay, faFilter } from "@fortawesome/free-solid-svg-icons";
-import { TokenContext } from "../../pages/UserPage/user";
+import {
+    faMagnifyingGlass,
+    faPlay,
+    faFilter,
+} from "@fortawesome/free-solid-svg-icons";
+import { TokenContext } from "../../pages/MainUserPage/user";
 import Empty from "../Empty/empty";
 import MusicCard from "../MusicCard/MusicCard";
 import { failedNotification } from "../notification";
@@ -26,11 +30,14 @@ export default function Favorite() {
     const getFavoriteSongs = (page = 0) => {
         setIsLoading(true);
         axios
-            .get(`${APIurl}/api/v1/users/songs/favorites?pageNo=${page}&sortField=${sortBy}&direction=${sortDirection}`, {
-                headers: {
-                    Authorization: `Bearer ${tokenData.token}`,
-                },
-            })
+            .get(
+                `${APIurl}/api/v1/users/songs/favorites?pageNo=${page}&sortField=${sortBy}&direction=${sortDirection}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                    },
+                }
+            )
             .then((res) => {
                 if (page === 0) {
                     setSongs([]);
@@ -49,7 +56,6 @@ export default function Favorite() {
             });
     };
 
-
     const searchSongsPaging = (input, page = 0) => {
         axios
             .get(
@@ -65,10 +71,7 @@ export default function Favorite() {
                     setSongs([]);
                 }
                 if (res.data.data.length !== 0) {
-                    setSongs((prevSongs) => [
-                        ...prevSongs,
-                        ...res.data.data,
-                    ]);
+                    setSongs((prevSongs) => [...prevSongs, ...res.data.data]);
                     searchSongsPaging(input, page + 1);
                 } else {
                     setIsLoading(false);
@@ -117,7 +120,7 @@ export default function Favorite() {
 
     React.useEffect(() => {
         getFavoriteSongs();
-    }, [sortBy,sortDirection]);
+    }, [sortBy, sortDirection]);
 
     React.useEffect(() => {
         const handler = (e) => {

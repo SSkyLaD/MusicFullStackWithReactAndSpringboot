@@ -2,7 +2,7 @@ import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import "./AddPlaylistPopup.scss";
-import { TokenContext } from "../../../pages/UserPage/user";
+import { TokenContext } from "../../../pages/MainUserPage/user";
 import { successNotification, failedNotification } from "../../notification";
 import axios from "axios";
 
@@ -34,7 +34,6 @@ export default function AddPlaylistPopup({
                 failedNotification(err.response.data.msg);
             });
     };
-    
 
     const playlistIcon = userLists.map((ele) => {
         return (

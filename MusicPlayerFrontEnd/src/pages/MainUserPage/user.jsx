@@ -12,6 +12,12 @@ const APIurl = import.meta.env.VITE_APIServerUrl;
 
 export default function UserPage() {
     const [mainComponent, setMainComponent] = React.useState(<Home key="home"/>); // Điều khiển mainComponent
+    const [avatar, setAvatar] = React.useState("");
+    const [tokenData, setTokenData] = React.useState({
+        token: "",
+        username: "",
+    });
+    const [background, setBackground] = React.useState("");
     const tracklist = React.useRef([]); //lưu tracklist khi được load từ mainComponent
     const tracklistIndex = React.useRef(); // lưu index tracklist đang chơi
     // Playsong là bài hát hiện tại đang được play
@@ -34,12 +40,12 @@ export default function UserPage() {
         }
     };
 
-    const getUserLists = (token) => {
+    const getUserLists = () => {
         axios
             .get(`${APIurl}/api/v1/users/lists`, {
                 headers: {
                     Accept: "application/json",
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${tokenData.token}`,
                 },
             })
             .then((res) => {
@@ -50,10 +56,35 @@ export default function UserPage() {
             });
     };
 
-    const [tokenData, setTokenData] = React.useState({
-        token: "",
-        username: "",
-    });
+    const getUserAvatar = () => {
+        axios
+            .get(`${APIurl}/api/v1/users/avatar`, {
+                headers: {
+                    Authorization: `Bearer ${tokenData.token}`,
+                },
+            })
+            .then((res) => {
+                setAvatar(res.data.data);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    };
+
+    const getUserBackground = () => {
+        axios
+            .get(`${APIurl}/api/v1/users/background`, {
+                headers: {
+                    Authorization: `Bearer ${tokenData.token}`,
+                },
+            })
+            .then((res) => {
+                setBackground(res.data.data);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    };
 
     // Navigate notoken
     const navigate = useNavigate();
@@ -85,6 +116,10 @@ export default function UserPage() {
                 setMainComponent,
                 userLists,
                 getUserLists,
+                avatar,
+                getUserAvatar,
+                background,
+                getUserBackground
             }}
         >
             <div className="user-page">

@@ -11,7 +11,7 @@ import {
     faVolumeXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import "./Player.scss";
-import { TokenContext } from "../../pages/UserPage/user";
+import { TokenContext } from "../../pages/MainUserPage/user";
 import { notification } from "../notification";
 const api = import.meta.env.VITE_APIServerUrl;
 

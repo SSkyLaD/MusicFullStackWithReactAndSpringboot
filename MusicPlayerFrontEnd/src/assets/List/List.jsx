@@ -3,7 +3,7 @@ import axios from "axios";
 import "./List.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay, faPencil, faTrash } from "@fortawesome/free-solid-svg-icons";
-import { TokenContext } from "../../pages/UserPage/user";
+import { TokenContext } from "../../pages/MainUserPage/user";
 import Empty from "../Empty/empty";
 import MusicCard from "../MusicCard/MusicCard";
 import { successNotification, failedNotification } from "../notification";
@@ -31,7 +31,7 @@ export default function List({ listName, listId }) {
             })
             .then((res) => {
                 setSongs(res.data.data);
-                setIsLoading(false)
+                setIsLoading(false);
             })
             .catch((err) => {
                 setIsLoading(false);
@@ -157,7 +157,7 @@ export default function List({ listName, listId }) {
                             <p>Play all</p>
                         </button>
                         <p>{songs.length}</p>
-                        {isLoading ? <Loading/> : ""}
+                        {isLoading ? <Loading /> : ""}
                     </div>
                 </div>
             </div>

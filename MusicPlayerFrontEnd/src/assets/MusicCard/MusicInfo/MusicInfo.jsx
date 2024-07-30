@@ -15,7 +15,6 @@ function MusicInfo({ songData, songInfo, setSongInfo }) {
         const day = String(dateFromDB.getDate()).padStart(2, "0");
         const month = String(dateFromDB.getMonth() + 1).padStart(2, "0");
         const year = dateFromDB.getFullYear();
-
         const formattedDate = `${year}-${month}-${day}`;
         return formattedDate;
     };

@@ -21,6 +21,14 @@ public interface UserService{
 
     User getUserData(String username);
 
+    String getUserAvatar(String username);
+
+    User uploadUserAvatar(String username, MultipartFile file) throws IOException;
+
+    String getUserBackground(String username);
+
+    User uploadUserBackground(String username, MultipartFile file) throws IOException;
+
     void deleteUser(String username, String inputPassword);
 
     List<SongDto> getAllUserSongsWithSortAndPaging(String username,int pageNo,int pageSize, String field, String direction);

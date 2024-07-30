@@ -42,11 +42,6 @@ public class UserController {
     private final JwtUlti jwtUlti;
     private final UserService userService;
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Object> maxUploadSizeExceeded(MaxUploadSizeExceededException e) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage() + " (200MB)"));
-    }
-
     @GetMapping
     private ResponseEntity<Object> getUserData() {
         @lombok.Data
@@ -54,23 +49,75 @@ public class UserController {
         @NoArgsConstructor
         class Data {
             private String username;
-            private String email;
             private Date accountCreateDate;
             private int numberOfSong;
+            private int numberOfPlaylist;
             private double availableMemory;
+            private String avatarImage;
+            private String backgroundImage;
         }
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             User user = userService.getUserData(username);
-            Data resData = new Data(user.getUsername(), user.getEmail(), user.getCreateDate(), user.getSumOfSongs(), user.getAvailableMemory() / (1024 * 1024));
+            Data resData = new Data(user.getUsername(),  user.getCreateDate(), user.getSumOfSongs(),user.getUserSongLists().size(), user.getAvailableMemory() / (1024 * 1024), user.getUserAvatar(),user.getUserBackground());
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseData("Success", resData));
-        } catch (ResourceNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
-    @DeleteMapping
+    @GetMapping("/avatar")
+    private ResponseEntity<Object> getUserAvatar() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            String userAvatar = userService.getUserAvatar(username);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData("Success!", userAvatar));
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
+        }
+    }
+
+    @PostMapping("/avatar/upload")
+    private ResponseEntity<Object> uploadUserAvatar(@RequestParam("file") MultipartFile file) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            User user = userService.uploadUserAvatar(username,file);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage("Success!"));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
+        }
+    }
+
+    @GetMapping("/background")
+    private ResponseEntity<Object> getUserBackground() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            String userBackground = userService.getUserBackground(username);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData("Success!", userBackground));
+        }catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
+        }
+    }
+
+    @PostMapping("/background/upload")
+    private ResponseEntity<Object> uploadUserBackground(@RequestParam("file") MultipartFile file) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String username = authentication.getName();
+            User user = userService.uploadUserBackground(username,file);
+            return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage("Success!"));
+        }
+        catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
+        }
+    }
+
+    @PostMapping("/delete")
     private ResponseEntity<Object> deleteUser(@RequestBody Map<String, String> password) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -78,7 +125,7 @@ public class UserController {
             userService.deleteUser(username, password.get("password"));
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage("User " + username + " delete successfully!"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -97,7 +144,7 @@ public class UserController {
             List<SongDto> data = userService.getAllUserSongsWithSortAndPaging(username, pageNo, pageSize, field, direction);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!", data.size(), data));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -125,7 +172,7 @@ public class UserController {
             List<SongDto> data = userService.searchAllUserSongsLikeNameWithSortAndPaging(username, pageNo, pageSize, sortField, direction, name);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!", data.size(), data));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -138,7 +185,7 @@ public class UserController {
             SongDto song = userService.deleteSongFromUser(username, id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage("Song id: " + song.getId() + " - " + song.getName() + " - " + song.getArtist() + " delete successfully!"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -156,7 +203,7 @@ public class UserController {
             List<SongDto> data = userService.getAllUserFavoriteSongsWithSortAndPaging(username, pageNo, pageSize, field, direction);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!", data.size(), data));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -183,7 +230,7 @@ public class UserController {
             List<SongDto> data = userService.searchAllUserFavoriteSongsLikeNameWithSortAndPaging(username, pageNo, pageSize, sortField, direction, name);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!", data.size(), data));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -195,7 +242,7 @@ public class UserController {
             SongDto song = userService.updateUserFavoriteSong(username, id, isFavorite.get("isFavorite"));
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseData("Success!", song));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -264,7 +311,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.OK).header("Content-Disposition", "attachment; filename=\"" + song.getFileName() + "\"").contentType(new MediaType("audio", subtype)) // FLAC - MP3
                     .contentLength(file.length()).body(new InputStreamResource(new FileInputStream(file)));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -276,7 +323,7 @@ public class UserController {
             List<SongDto> result = userService.addSongsToUser(username, files);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseDataList("Success", result.size(),result));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -288,7 +335,7 @@ public class UserController {
             List<SongListDto> songListDto = userService.getAllUserCustomLists(username);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!", songListDto.size(), songListDto));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -300,7 +347,7 @@ public class UserController {
             userService.createUserCustomList(username, listName.get("name"));
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseMessage("Playlist " + listName.get("name") + " created successfully!"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -316,7 +363,7 @@ public class UserController {
             }
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseData("Success!", songDtos));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -328,7 +375,7 @@ public class UserController {
             SongList songList = userService.deleteUserCustomList(username, id);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage("Deleted playlist " + songList.getName() + " successfully!"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -340,7 +387,7 @@ public class UserController {
             SongList songList = userService.updateUserCustomList(username, id, listName.get("name"));
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage("Playlist name updated to " + songList.getName() + " successfully!"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -353,7 +400,7 @@ public class UserController {
             String message = userService.addSongToCustomList(username, id, songId);
             return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseMessage(message));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
     }
 
@@ -365,7 +412,12 @@ public class UserController {
             String message = userService.removeSongFromCustomList(username, id, songId);
             return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage(message));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Error"));
         }
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<Object> maxUploadSizeExceeded(MaxUploadSizeExceededException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Files size exceeded 200MB"));
     }
 }

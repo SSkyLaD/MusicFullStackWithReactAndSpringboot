@@ -1,11 +1,17 @@
 import "./Home.scss";
 import Clock from "./Clock/Clock";
 import React, { useEffect } from "react";
-import { TokenContext } from "../../pages/UserPage/user";
+import { TokenContext } from "../../pages/MainUserPage/user";
 
 export default function Home() {
-    const { tracklist, tracklistIndex, setPlaySong } =
-        React.useContext(TokenContext);
+    const {
+        tokenData,
+        tracklist,
+        tracklistIndex,
+        setPlaySong,
+        background,
+        getUserBackground,
+    } = React.useContext(TokenContext);
     const [queue, setQueue] = React.useState(tracklist.current);
     const mouseOnQueueContainer = React.useRef(false);
 
@@ -13,8 +19,6 @@ export default function Home() {
         tracklistIndex.current = index;
         setPlaySong(tracklist.current[tracklistIndex.current]);
     };
-
-    //chuyển vị trí của bài hát đang nghe ra giứa view của box
 
     const queueHTML = queue.map((item, index) => {
         return (
@@ -36,6 +40,7 @@ export default function Home() {
         );
     });
 
+    //chuyển vị trí của bài hát đang nghe ra giữa view của box
     useEffect(() => {
         setQueue(tracklist.current);
         const element = document.querySelector(".queue-item-playing");
@@ -43,6 +48,12 @@ export default function Home() {
             element.scrollIntoView({ behavior: "smooth", block: "center" });
         }
     }, [tracklist.current, tracklistIndex.current]);
+
+    useEffect(()=>{
+        if(tokenData.token){
+            getUserBackground();
+        }
+    },[tokenData.token])
 
     const NothingHere = () => {
         return (
@@ -73,7 +84,13 @@ export default function Home() {
     };
 
     return (
-        <div className="home">
+        <div
+            className="home"
+            style={{
+                backgroundImage: `url(${background})`,
+                backgroundSize: "cover",
+            }}
+        >
             <div className="main-window"></div>
             <div className="side-window">
                 <Clock className="clock" />

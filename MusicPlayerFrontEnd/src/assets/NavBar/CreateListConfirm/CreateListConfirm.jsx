@@ -1,12 +1,16 @@
 import axios from "axios";
 import React from "react";
-import { TokenContext } from "../../../pages/UserPage/user";
+import { TokenContext } from "../../../pages/MainUserPage/user";
 import { successNotification } from "../../notification";
 import "./CreateListConfirm.scss";
 
 const APIurl = import.meta.env.VITE_APIServerUrl;
 
-export default function CreateListConfirm({ createList, setCreateList,getUserLists }) {
+export default function CreateListConfirm({
+    createList,
+    setCreateList,
+    getUserLists,
+}) {
     const { tokenData } = React.useContext(TokenContext);
     const [listName, setListName] = React.useState("");
     const [warning, setWarning] = React.useState("");
@@ -36,6 +40,9 @@ export default function CreateListConfirm({ createList, setCreateList,getUserLis
             })
             .catch((err) => {
                 setWarning(err.response.data.msg);
+                setTimeout(() => {
+                    setWarning("");
+                }, 10000);
             });
     };
 

@@ -56,7 +56,6 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final SongRepository songRepository;
     private final SongListRepository songlistRepository;
-    private final SongMapper songMapper;
 
     @Override
     public void createUser(UserDto userDto) {
@@ -77,11 +76,13 @@ public class UserServiceImpl implements UserService {
         if (!userDto.getEmail().matches(EMAIL_PATTERN)) {
             throw new InvalidInputException("Invalid email address");
         }
+
+        //TODO: change to Spring validate
         if (userDto.getPassword().length() < 6) {
             throw new InvalidInputException("Password must be at least 6 characters");
         }
-        if (userDto.getPassword().length() > 50) {
-            throw new InvalidInputException("Password must be less than 50 character");
+        if (userDto.getPassword().length() > 30) {
+            throw new InvalidInputException("Password must be less than 30 character");
         }
         if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
             throw new UsernameAlreadyExistException("Username already exist");
@@ -102,6 +103,44 @@ public class UserServiceImpl implements UserService {
     @Override
     public User getUserData(String username) {
         return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+    }
+
+    @Override
+    public String getUserAvatar(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        return user.getUserAvatar();
+    }
+
+    @Override
+    public User uploadUserAvatar(String username, MultipartFile file) throws IOException {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        List<String> allowFileType = new ArrayList<>();
+        allowFileType.add("image/jpg");
+        allowFileType.add("image/png");
+        byte[] fileContent = file.getBytes();
+        String encodedString = Base64.getEncoder().encodeToString(fileContent);
+        String encodedImage = "data:" + file.getContentType() + ";base64," + encodedString;
+        user.setUserAvatar(encodedImage);
+        return userRepository.save(user);
+    }
+
+    @Override
+    public String getUserBackground(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        return user.getUserBackground();
+    }
+
+    @Override
+    public User uploadUserBackground(String username, MultipartFile file) throws IOException {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        List<String> allowFileType = new ArrayList<>();
+        allowFileType.add("image/jpg");
+        allowFileType.add("image/png");
+        byte[] fileContent = file.getBytes();
+        String encodedString = Base64.getEncoder().encodeToString(fileContent);
+        String encodedImage = "data:" + file.getContentType() + ";base64," + encodedString;
+        user.setUserBackground(encodedImage);
+        return userRepository.save(user);
     }
 
     @Transactional
@@ -363,7 +402,7 @@ public class UserServiceImpl implements UserService {
         if (user.getUserSongLists().size() >= 5) {
             throw new InvalidInputException("Playlist limit is 5");
         }
-        if(songlistRepository.findByName(listName) != null){
+        if (songlistRepository.findByName(listName) != null) {
             throw new InvalidInputException("Playlist " + listName + " already exists");
         }
         SongList newList = new SongList(listName.trim());
@@ -384,8 +423,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public SongList getUserCustomList(String username, Long id) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(),id);
-        if(songList == null){
+        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(), id);
+        if (songList == null) {
             throw new ResourceNotFoundException("Playlist not found");
         }
         return songList;
@@ -394,8 +433,8 @@ public class UserServiceImpl implements UserService {
     @Override
     public SongList deleteUserCustomList(String username, Long id) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(),id);
-        if(songList == null){
+        SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(), id);
+        if (songList == null) {
             throw new ResourceNotFoundException("Playlist not found");
         }
         songlistRepository.delete(songList);
@@ -405,11 +444,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public SongList updateUserCustomList(String username, Long id, String listName) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        if(songlistRepository.findByName(listName) != null){
+        if (songlistRepository.findByName(listName) != null) {
             throw new InvalidInputException("Playlist name already exists");
         }
-        SongList updateSongList = songlistRepository.findByUserOwnerIdAndId(user.getId(),id);
-        if(updateSongList == null){
+        SongList updateSongList = songlistRepository.findByUserOwnerIdAndId(user.getId(), id);
+        if (updateSongList == null) {
             throw new ResourceNotFoundException("Playlist not found");
         }
         updateSongList.setName(listName);
