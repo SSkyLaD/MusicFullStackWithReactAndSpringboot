@@ -15,7 +15,7 @@ import org.example.dbconnectdemo.model.User;
 import org.example.dbconnectdemo.repository.SongRepository;
 import org.example.dbconnectdemo.repository.UserRepository;
 import org.example.dbconnectdemo.service.AdminService;
-import org.example.dbconnectdemo.service.Utility;
+import org.example.dbconnectdemo.utilities.GeneralUtility;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -129,7 +129,7 @@ public class AdminServiceImpl implements AdminService {
         }
         User user = userRepository.findById(userId).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         List<Song> songs = user.getUserSongs();
-        Utility.sortSongs(songs,field,direction);
+        GeneralUtility.sortSongs(songs,field,direction);
         List<SongDto> songsdto = new ArrayList<>();
         for (Song song : songs) {
             songsdto.add(SongMapper.mapToSongDto(song));

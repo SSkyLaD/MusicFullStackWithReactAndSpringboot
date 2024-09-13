@@ -1,9 +1,14 @@
 package org.example.dbconnectdemo.service;
 
-import org.example.dbconnectdemo.dto.RegisterBody;
+import jakarta.mail.MessagingException;
+import org.example.dbconnectdemo.dto.Request.LoginReqBody;
+import org.example.dbconnectdemo.dto.Request.RegisterReqBody;
+import org.example.dbconnectdemo.dto.Request.VerifyUserReq;
 import org.example.dbconnectdemo.dto.UserDto;
 
 public interface AuthenticateService {
-    void register(RegisterBody registerBody);
-    String login(UserDto userDto);
+    void register(RegisterReqBody registerReqBody);
+    String login(LoginReqBody loginReqBody);
+    void loginV2(LoginReqBody loginReqBody) throws MessagingException;
+    String verifyLogin(VerifyUserReq verifyUserReq);
 }

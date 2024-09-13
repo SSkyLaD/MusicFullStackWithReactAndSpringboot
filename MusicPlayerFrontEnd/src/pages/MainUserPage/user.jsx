@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import "./user.scss";
 import { defaultAlbumImageBase64 } from "../../assets/imageBase64";
 import axios from "axios";
+
 export const TokenContext = React.createContext();
 
 const APIurl = import.meta.env.VITE_APIServerUrl;
@@ -17,12 +18,11 @@ export default function UserPage() {
         token: "",
         username: "",
     });
+
     const [background, setBackground] = React.useState("");
     const tracklist = React.useRef([]); //lưu tracklist khi được load từ mainComponent
     const tracklistIndex = React.useRef(); // lưu index tracklist đang chơi
     // Playsong là bài hát hiện tại đang được play
-
-    const [userLists, setUserLists] = React.useState([]);
 
     const [playSong, setPlaySong] = React.useState({
         id: "",
@@ -30,6 +30,8 @@ export default function UserPage() {
         artist: "Unknow",
         albumImageBase64: defaultAlbumImageBase64,
     });
+
+    const [userLists, setUserLists] = React.useState([]);
 
     // xử lý playAll từ các mainComponent
     const handlePlayAll = (arr) => {
@@ -119,7 +121,7 @@ export default function UserPage() {
                 avatar,
                 getUserAvatar,
                 background,
-                getUserBackground
+                getUserBackground,
             }}
         >
             <div className="user-page">

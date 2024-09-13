@@ -1,8 +1,8 @@
 package org.example.dbconnectdemo.controller;
 
 import lombok.AllArgsConstructor;
-import org.example.dbconnectdemo.dto.ResponseDataList;
-import org.example.dbconnectdemo.dto.ResponseMessage;
+import org.example.dbconnectdemo.dto.Response.BaseResponse;
+import org.example.dbconnectdemo.dto.Response.ListResponse;
 import org.example.dbconnectdemo.dto.SongDto;
 import org.example.dbconnectdemo.dto.UserDto;
 import org.example.dbconnectdemo.service.AdminService;
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5150")
 @RequestMapping("/api/v1/admin")
 @AllArgsConstructor
 public class AdminController {
@@ -34,9 +33,9 @@ public class AdminController {
             String sortField = qparam.get("sortField") == null || qparam.get("sortField").isEmpty() ? "createDate" : qparam.get("pageNo");
             String direction = qparam.get("direction") == null || qparam.get("direction").isEmpty() ? "asc" : qparam.get("direction");
             List<UserDto> user = adminService.getAllUsersDetailWithSortAndPaging(username,pageNo,pageSize,sortField,direction);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!", user.size(), user));
+            return ResponseEntity.status(HttpStatus.OK).body(new ListResponse(200,"Success!", user.size(), user));
         } catch (Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
         }
     }
 
@@ -53,9 +52,9 @@ public class AdminController {
             String direction = qparam.getOrDefault("direction", "asc");
 
             List<UserDto> users = adminService.searchAllUsersByNameWithSortAndPaging(adminName, searchName, pageNo, pageSize, sortField, direction);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!", users.size(), users));
+            return ResponseEntity.status(HttpStatus.OK).body(new ListResponse(200,"Success!", users.size(), users));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
         }
     }
 
@@ -66,9 +65,9 @@ public class AdminController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             String deletedUsername = adminService.deleteUser(username, password.get("password"),id);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage("User " + deletedUsername + " delete successfully!"));
+            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse(200,"User " + deletedUsername + " delete successfully!"));
         } catch(Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
         }
     }
 
@@ -81,12 +80,12 @@ public class AdminController {
             String username = authentication.getName();
             if(!qparam.isEmpty()){
                 List<SongDto> data = adminService.getAllUserSongsWithSort(username,userId,qparam.get("sortField"), qparam.get("direction"));
-                return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!",data.size(),data));
+                return ResponseEntity.status(HttpStatus.OK).body(new ListResponse(200,"Success!",data.size(),data));
             }
             List<SongDto> data = adminService.getAllUserSongs(username,userId);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseDataList("Success!", data.size(), data));
+            return ResponseEntity.status(HttpStatus.OK).body(new ListResponse(200,"Success!", data.size(), data));
         } catch(Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
         }
     }
 
@@ -96,9 +95,9 @@ public class AdminController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = authentication.getName();
             SongDto song = adminService.deleteUserSong(username, userId,songId);
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseMessage("Song id: " + song.getId() + " - " + song.getName() + " - " + song.getArtist() + " delete successfully!"));
+            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse(200,"Song id: " + song.getId() + " - " + song.getName() + " - " + song.getArtist() + " delete successfully!"));
         } catch(Exception e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
         }
     }
 }

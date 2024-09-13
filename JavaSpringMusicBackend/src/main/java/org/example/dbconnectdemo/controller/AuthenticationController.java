@@ -1,12 +1,15 @@
 package org.example.dbconnectdemo.controller;
 
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
-import org.example.dbconnectdemo.dto.RegisterBody;
-import org.example.dbconnectdemo.dto.ResponseData;
-import org.example.dbconnectdemo.dto.UserDto;
+import org.example.dbconnectdemo.dto.Request.LoginReqBody;
+import org.example.dbconnectdemo.dto.Request.RegisterReqBody;
+import org.example.dbconnectdemo.dto.Request.VerifyUserReq;
+import org.example.dbconnectdemo.dto.Response.BaseResponse;
+import org.example.dbconnectdemo.dto.Response.LoginRes;
+import org.example.dbconnectdemo.dto.Response.ObjectResponse;
 import org.example.dbconnectdemo.exception.InvalidInputException;
 import org.example.dbconnectdemo.exception.UsernameAlreadyExistException;
-import org.example.dbconnectdemo.dto.ResponseMessage;
 import org.example.dbconnectdemo.service.AuthenticateService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,43 +18,66 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:5150")
 @RequestMapping("/api/v1/auth")
 public class AuthenticationController {
     private final AuthenticateService authenticateService;
 
     @PostMapping("/register")
-    public ResponseEntity<Object> register(@RequestBody RegisterBody registerBody) {
+    public ResponseEntity<Object> register(@RequestBody RegisterReqBody registerReqBody) {
         try {
-            authenticateService.register(registerBody);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ResponseMessage("Account created successfully!"));
+            authenticateService.register(registerReqBody);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new BaseResponse(201,"Account created successfully!"));
         } catch (InvalidInputException e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
         } catch(UsernameAlreadyExistException e){
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(new BaseResponse(400,e.getMessage()));
         }
     }
     @PostMapping("/login")
-    public ResponseEntity<Object> login(@RequestBody UserDto userDto){
-        @lombok.Data
-        @RequiredArgsConstructor
-        class Data {
-            private String token;
-            private String username;
-
-            public Data(String token, String username){
-                this.token = token;
-                this.username = username;
-            }
-        }
+    public ResponseEntity<Object> login(@RequestBody LoginReqBody loginReqBody){
         try {
-            String token = authenticateService.login(userDto);
-            Data responseLogin = new Data(token, userDto.getUsername());
-            return ResponseEntity.status(HttpStatus.OK).body(new ResponseData("Login successfully!",responseLogin));
+            String token = authenticateService.login(loginReqBody);
+            LoginRes responseLogin = new LoginRes(token, loginReqBody.getUsername());
+            return ResponseEntity.status(HttpStatus.OK).body(new ObjectResponse(200,"Login successfully!",responseLogin));
         } catch (InvalidInputException e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage(e.getMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
         } catch (AuthenticationException e){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ResponseMessage("Username or password not correct!"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,"Username or password not correct!"));
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BaseResponse(500,"Error occurred!"));
+        }
+    }
+
+    @PostMapping("/loginV2")
+    public ResponseEntity<Object> loginV2(@RequestBody LoginReqBody loginReqBody){
+        try {
+            authenticateService.loginV2(loginReqBody);
+            return ResponseEntity.status(HttpStatus.OK).body(new BaseResponse(200,"OTP send, please verify to login"));
+        } catch (InvalidInputException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
+        } catch (AuthenticationException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,"Username or password not correct!"));
+        } catch (MessagingException e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BaseResponse(500,"Error occurred when send OTP!"));
+        }
+        catch (Exception e){
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BaseResponse(500,"Error occurred!"));
+        }
+    }
+
+    @PostMapping("/loginV2/verification")
+    public ResponseEntity<Object> loginVerification(@RequestBody VerifyUserReq verifyUserReq){
+        try {
+            String token = authenticateService.verifyLogin(verifyUserReq);
+            LoginRes responseLogin = new LoginRes(token, verifyUserReq.getUsername());
+            return ResponseEntity.status(HttpStatus.OK).body(new ObjectResponse(200,"Login successfully!",responseLogin));
+        } catch (InvalidInputException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,e.getMessage()));
+        } catch (AuthenticationException e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400,"Username or password not correct!"));
+        } catch (Exception e){
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BaseResponse(500,"Error occurred!"));
         }
     }
 }

@@ -5,13 +5,11 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.example.dbconnectdemo.dto.SongDto;
 import org.example.dbconnectdemo.dto.SongListDto;
-import org.example.dbconnectdemo.dto.UserDto;
+import org.example.dbconnectdemo.dto.TransferPageObject;
 import org.example.dbconnectdemo.exception.InvalidInputException;
 import org.example.dbconnectdemo.exception.ResourceNotFoundException;
-import org.example.dbconnectdemo.exception.UsernameAlreadyExistException;
 import org.example.dbconnectdemo.map.SongListMapper;
 import org.example.dbconnectdemo.map.SongMapper;
-import org.example.dbconnectdemo.map.UserMapper;
 import org.example.dbconnectdemo.model.Role;
 import org.example.dbconnectdemo.model.Song;
 import org.example.dbconnectdemo.model.SongList;
@@ -20,7 +18,6 @@ import org.example.dbconnectdemo.repository.SongListRepository;
 import org.example.dbconnectdemo.repository.SongRepository;
 import org.example.dbconnectdemo.repository.UserRepository;
 import org.example.dbconnectdemo.service.UserService;
-import org.example.dbconnectdemo.spring_security.ApplicationConfig;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
@@ -31,6 +28,7 @@ import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.images.Artwork;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -51,54 +49,10 @@ import static org.apache.catalina.startup.ExpandWar.deleteDir;
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private final ApplicationConfig applicationConfig;
-    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
     private final SongRepository songRepository;
     private final SongListRepository songlistRepository;
-
-    @Override
-    public void createUser(UserDto userDto) {
-        String USERNAME_PATTERN = "^[a-zA-Z0-9]+$";
-        if (userDto.getUsername() == null || userDto.getUsername().isEmpty()) {
-            throw new InvalidInputException("Username cannot be blank");
-        }
-        if (!userDto.getUsername().matches(USERNAME_PATTERN)) {
-            throw new InvalidInputException("Username invalid");
-        }
-        if (userDto.getEmail() == null || userDto.getEmail().isEmpty()) {
-            throw new InvalidInputException("Email cannot be blank");
-        }
-        if (userDto.getPassword() == null || userDto.getPassword().isEmpty()) {
-            throw new InvalidInputException("Password cannot be blank");
-        }
-        String EMAIL_PATTERN = "^[\\w-.]+@([\\w-]+\\.)+[\\w-]{2,4}$";
-        if (!userDto.getEmail().matches(EMAIL_PATTERN)) {
-            throw new InvalidInputException("Invalid email address");
-        }
-
-        //TODO: change to Spring validate
-        if (userDto.getPassword().length() < 6) {
-            throw new InvalidInputException("Password must be at least 6 characters");
-        }
-        if (userDto.getPassword().length() > 30) {
-            throw new InvalidInputException("Password must be less than 30 character");
-        }
-        if (userRepository.findByUsername(userDto.getUsername()).isPresent()) {
-            throw new UsernameAlreadyExistException("Username already exist");
-        }
-
-        File userDir = new File(applicationConfig.getStaticFileUrl() + userDto.getUsername());
-        if (!userDir.exists()) {
-            if (!userDir.mkdir()) {
-                throw new RuntimeException("Create directory failed");
-            }
-        }
-        User user = UserMapper.mapToUser(userDto);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setUserDir(userDir.getAbsolutePath());
-        userRepository.save(user);
-    }
 
     @Override
     public User getUserData(String username) {
@@ -117,6 +71,9 @@ public class UserServiceImpl implements UserService {
         List<String> allowFileType = new ArrayList<>();
         allowFileType.add("image/jpg");
         allowFileType.add("image/png");
+        if(!allowFileType.contains(file.getContentType())){
+            throw new InvalidInputException("Not Allowed file type!");
+        }
         byte[] fileContent = file.getBytes();
         String encodedString = Base64.getEncoder().encodeToString(fileContent);
         String encodedImage = "data:" + file.getContentType() + ";base64," + encodedString;
@@ -136,6 +93,9 @@ public class UserServiceImpl implements UserService {
         List<String> allowFileType = new ArrayList<>();
         allowFileType.add("image/jpg");
         allowFileType.add("image/png");
+        if(!allowFileType.contains(file.getContentType())){
+            throw new InvalidInputException("Not Allowed file type!");
+        }
         byte[] fileContent = file.getBytes();
         String encodedString = Base64.getEncoder().encodeToString(fileContent);
         String encodedImage = "data:" + file.getContentType() + ";base64," + encodedString;
@@ -148,7 +108,7 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(String username, String inputPassword) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         if (!passwordEncoder.matches(inputPassword, user.getPassword())) {
-            throw new RuntimeException("Password not match");
+            throw new InvalidInputException("Password not match");
         }
         File userDir = new File(user.getUserDir());
         File[] contents = userDir.listFiles();
@@ -165,7 +125,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public List<SongDto> getAllUserSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
+    public TransferPageObject getAllUserSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
@@ -174,16 +134,36 @@ public class UserServiceImpl implements UserService {
         if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).descending());
         }
-        List<Song> songs = songRepository.findAllByUserOwnerId(user.getId(), paging);
+        Page<Song> songs = songRepository.findAllByUserOwnerId(user.getId(), paging);
+
+        List<SongDto> songsDto = new ArrayList<>();
+        for (Song aSong : songs.getContent()) {
+            songsDto.add(SongMapper.mapToSongDto(aSong));
+        }
+        return new TransferPageObject(songs.getTotalPages(), songs.getTotalElements(),songsDto);
+    }
+
+    @Override
+    public TransferPageObject searchAllUserSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        Pageable paging = null;
+
+        if (Objects.equals(direction, "asc")) {
+            paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
+        }
+        if (Objects.equals(direction, "desc")) {
+            paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
+        }
+        Page<Song> songs = songRepository.findAllByUserOwnerIdAndNameContaining(user.getId(), name, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
         }
-        return songsDto;
+        return new TransferPageObject(songs.getTotalPages(), songs.getTotalElements(),songsDto);
     }
 
     @Override
-    public List<SongDto> searchAllUserSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name) {
+    public TransferPageObject searchAllUserSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
@@ -192,30 +172,12 @@ public class UserServiceImpl implements UserService {
         if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
         }
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndNameContaining(user.getId(), name, paging);
+        Page<Song> songs = songRepository.findAllByUserOwnerIdAndArtistContaining(user.getId(), artist, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
         }
-        return songsDto;
-    }
-
-    @Override
-    public List<SongDto> searchAllUserSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist) {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-        Pageable paging = null;
-        if (Objects.equals(direction, "asc")) {
-            paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
-        }
-        if (Objects.equals(direction, "desc")) {
-            paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
-        }
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndArtistContaining(user.getId(), artist, paging);
-        List<SongDto> songsDto = new ArrayList<>();
-        for (Song aSong : songs) {
-            songsDto.add(SongMapper.mapToSongDto(aSong));
-        }
-        return songsDto;
+        return new TransferPageObject(songs.getTotalPages(), songs.getTotalElements(),songsDto);
     }
 
 
@@ -231,7 +193,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public List<SongDto> getAllUserFavoriteSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
+    public TransferPageObject getAllUserFavoriteSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
@@ -240,16 +202,16 @@ public class UserServiceImpl implements UserService {
         if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).descending());
         }
-        List<Song> favoriteSongs = songRepository.findAllByUserOwnerIdAndFavorite(user.getId(), true, paging);
+        Page<Song> favoriteSongs = songRepository.findAllByUserOwnerIdAndFavorite(user.getId(), true, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : favoriteSongs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
         }
-        return songsDto;
+        return new TransferPageObject(favoriteSongs.getTotalPages(), favoriteSongs.getTotalElements(),songsDto);
     }
 
     @Override
-    public List<SongDto> searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name) {
+    public TransferPageObject searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
@@ -258,16 +220,16 @@ public class UserServiceImpl implements UserService {
         if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
         }
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndNameContaining(user.getId(), true, name, paging);
+        Page<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndNameContaining(user.getId(), true, name, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
         }
-        return songsDto;
+        return new TransferPageObject(songs.getTotalPages(), songs.getTotalElements(),songsDto);
     }
 
     @Override
-    public List<SongDto> searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist) {
+    public TransferPageObject searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
@@ -276,12 +238,12 @@ public class UserServiceImpl implements UserService {
         if (Objects.equals(direction, "desc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).descending());
         }
-        List<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndArtistContaining(user.getId(), true, artist, paging);
+        Page<Song> songs = songRepository.findAllByUserOwnerIdAndFavoriteAndArtistContaining(user.getId(), true, artist, paging);
         List<SongDto> songsDto = new ArrayList<>();
         for (Song aSong : songs) {
             songsDto.add(SongMapper.mapToSongDto(aSong));
         }
-        return songsDto;
+        return new TransferPageObject(songs.getTotalPages(), songs.getTotalElements(),songsDto);
     }
 
     @Override

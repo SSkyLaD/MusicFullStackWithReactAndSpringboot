@@ -31,6 +31,7 @@ export default function AddPlaylistPopup({
                 setAddPlaylist(false);
             })
             .catch((err) => {
+                console.log(err);
                 failedNotification(err.response.data.msg);
             });
     };
@@ -40,7 +41,7 @@ export default function AddPlaylistPopup({
             <div
                 className="playlist-box"
                 key={ele.id}
-                onClick={() => addSongToPlaylist(ele.id, songData.id)}
+                onClick={() => addSongToPlaylist(parseInt(ele.id), parseInt(songData.id))}
             >
                 <FontAwesomeIcon icon={faPlus} />
                 <p>{ele.name}</p>

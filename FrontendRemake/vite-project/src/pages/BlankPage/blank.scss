@@ -1,0 +1,23 @@
+.blank-page{
+    font-family: 'Roboto', sans-serif;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    h2{
+        display: inline-block;
+        color: white;
+    }
+    :first-child{
+        padding-right: 20px;
+        border-right: 1px solid white;
+        font-size: 30px;
+        font-weight: 500;
+    }
+    :last-child{
+        padding-left: 20px;
+        font-weight: 300;
+    }
+}

@@ -2,6 +2,7 @@ package org.example.dbconnectdemo.service;
 
 import org.example.dbconnectdemo.dto.SongListDto;
 import org.example.dbconnectdemo.dto.SongDto;
+import org.example.dbconnectdemo.dto.TransferPageObject;
 import org.example.dbconnectdemo.dto.UserDto;
 import org.example.dbconnectdemo.model.Song;
 import org.example.dbconnectdemo.model.SongList;
@@ -17,8 +18,6 @@ import java.io.IOException;
 import java.util.List;
 
 public interface UserService{
-    void createUser(UserDto userDto);
-
     User getUserData(String username);
 
     String getUserAvatar(String username);
@@ -31,19 +30,19 @@ public interface UserService{
 
     void deleteUser(String username, String inputPassword);
 
-    List<SongDto> getAllUserSongsWithSortAndPaging(String username,int pageNo,int pageSize, String field, String direction);
+    TransferPageObject getAllUserSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction);
 
-    List<SongDto> searchAllUserSongsLikeNameWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name);
+    TransferPageObject searchAllUserSongsLikeNameWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name);
 
-    List<SongDto> searchAllUserSongsLikeArtistWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name);
+    TransferPageObject searchAllUserSongsLikeArtistWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name);
 
     Song getUserSong(String username, Long songId);
 
-    List<SongDto> getAllUserFavoriteSongsWithSortAndPaging(String username,int pageNo,int pageSize, String field, String direction);
+    TransferPageObject getAllUserFavoriteSongsWithSortAndPaging(String username,int pageNo,int pageSize, String field, String direction);
 
-    List<SongDto> searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name);
+    TransferPageObject searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name);
 
-    List<SongDto> searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name);
+    TransferPageObject searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name);
 
     SongDto updateUserFavoriteSong(String username, Long songId, boolean isFavorite);
 
