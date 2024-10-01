@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../redux/store";
 import userSlice, { fetchDeleteAccout } from "../../userSlice";
-import { successNotification } from "../../Component/notification";
+import { failedNotification, successNotification } from "../../Component/notification";
+import useResetAndNavigate from "../../../../CustomHook/useResetAndNavigate";
 
 interface DeleteAccountConfirmParams {
     deleteConfirm: boolean;
@@ -26,6 +27,7 @@ export default function DeleteAccountConfirm({
     const [input, setInput] = React.useState("");
     const [errorMgs, setErrorMsg] = React.useState("");
     const navigate = useNavigate();
+    const resetAndNavigate = useResetAndNavigate()
 
     const handleDeleteAcc = (password: string) => {
         dispatch(fetchDeleteAccout(password))
@@ -36,10 +38,16 @@ export default function DeleteAccountConfirm({
                 navigate("/login");
             })
             .catch((error) => {
-                setErrorMsg(error.msg);
-                setTimeout(() => {
-                    setErrorMsg("");
-                }, 7000);
+                if(error.code == 444){
+                    resetAndNavigate();
+                    failedNotification("Your account logged in different location");
+                }
+                else{
+                    setErrorMsg(error.msg);
+                    setTimeout(() => {
+                        setErrorMsg("");
+                    }, 7000);
+                }
             });
     };
 

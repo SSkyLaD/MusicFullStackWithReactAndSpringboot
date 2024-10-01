@@ -11,10 +11,12 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "./NavBar.scss";
 import { useDispatch, useSelector } from "react-redux";
-import userSlice, { fetchUserPlaylist, fetchUserProfile } from "../userSlice";
+import { fetchUserPlaylist, fetchUserProfile } from "../userSlice";
 import Loading from "../../../assets/Loading/Loading";
 import { RootState, AppDispatch } from "../../../redux/store";
 import CreateListConfirm from "./CreateListConfirm/CreateListConfirm";
+import useResetAndNavigate from "../../../CustomHook/useResetAndNavigate";
+import { failedNotification } from "../Component/notification";
 
 export default function NavBar() {
     const [createList, setCreateList] = useState(false);
@@ -26,6 +28,7 @@ export default function NavBar() {
         (state: RootState) => state.users.profileState
     );
     const dispatch = useDispatch<AppDispatch>();
+    const resetAndNavigate = useResetAndNavigate();
 
     const navigate = useNavigate();
 
@@ -54,8 +57,7 @@ export default function NavBar() {
     };
 
     const handleLogout = () => {
-        dispatch(userSlice.actions.resetState());
-        navigate("/login");
+        resetAndNavigate();
     };
 
     useEffect(() => {
@@ -65,13 +67,35 @@ export default function NavBar() {
             return;
         }
         if (fetchProfileStatus === "idle" || fetchProfileStatus === "failed") {
-            dispatch(fetchUserProfile());
+            dispatch(fetchUserProfile())
+                .unwrap()
+                .catch((err) => {
+                    console.log(err);
+                    if (err.code == 444) {
+                        resetAndNavigate();
+                        failedNotification(
+                            "Your account logged in different location"
+                        );
+                        return;
+                    }
+                });
         }
         if (
             fetchPlaylistStatus === "idle" ||
             fetchPlaylistStatus === "failed"
         ) {
-            dispatch(fetchUserPlaylist());
+            dispatch(fetchUserPlaylist())
+                .unwrap()
+                .catch((err) => {
+                    console.log(err);
+                    if (err.code == 444) {
+                        resetAndNavigate();
+                        failedNotification(
+                            "Your account logged in different location"
+                        );
+                        return;
+                    }
+                });
         }
     }, [fetchProfileStatus, fetchPlaylistStatus]);
 

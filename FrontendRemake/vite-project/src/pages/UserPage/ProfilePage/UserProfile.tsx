@@ -10,8 +10,10 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "../../../redux/store";
 import { uploadAvatarImage, uploadBackgroundImage } from "../userSlice";
+import useResetAndNavigate from "../../../CustomHook/useResetAndNavigate";
 
 export default function UserProfile() {
+
     const { createDate, numberOfSongs, numberOfPlaylist, availableMemory, fetchUploadUserAvatarStatus, fetchUploadUserBackgroundImgStatus } =
         useSelector((state: RootState) => state.users.profileState);
 
@@ -23,6 +25,8 @@ export default function UserProfile() {
         (state: RootState) => state.users.homePageState
     );
     const dispatch = useDispatch<AppDispatch>();
+
+    const resetAndNavigate = useResetAndNavigate()
 
     const { username } = useSelector(
         (state: RootState) => state.users.navBarState
@@ -83,14 +87,20 @@ export default function UserProfile() {
         fd.append("file", avatarImageFile[0]);
 
         dispatch(uploadAvatarImage(fd))
-            .unwrap() // Sửa lỗi từ 'unwarp' thành 'unwrap'
+            .unwrap()
             .then(() => {
                 successNotification("Avatar changed successfully!!!");
                 setAvatarImageFile(null);
                 changeAvatarRef.current!.value = "";
             })
-            .catch(() => {
-                failedNotification("Something wrong when change your avatar...");
+            .catch((err) => {
+                if(err.code == 444){
+                    resetAndNavigate();
+                    failedNotification("Your account logged in different location");
+                }
+                else{
+                    failedNotification("Something wrong when change your avatar...");
+                }
             });
     };
 
@@ -110,8 +120,14 @@ export default function UserProfile() {
                 setAvatarImageFile(null);
                 changeBackgroundRef.current!.value = "";
             })
-            .catch(() => {
-                failedNotification("Something wrong when change your avatar...");
+            .catch((err) => {
+                if(err.code == 444){
+                    resetAndNavigate();
+                    failedNotification("Your account logged in different location");
+                }
+                else{
+                    failedNotification("Something wrong when change your avatar...");
+                }
             });
     };
 

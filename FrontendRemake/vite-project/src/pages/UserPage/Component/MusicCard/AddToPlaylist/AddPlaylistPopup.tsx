@@ -6,6 +6,7 @@ import { successNotification, failedNotification } from "../../notification";
 import { fetchAddSongToPlaylist, Song } from "../../../userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../../../redux/store";
+import useResetAndNavigate from "../../../../../CustomHook/useResetAndNavigate";
 
 interface AddPlaylistPopupParams {
     songData: Song;
@@ -19,6 +20,7 @@ export default function AddPlaylistPopup({
     setAddPlaylist,
 }: AddPlaylistPopupParams) {
     const dispatch = useDispatch<AppDispatch>();
+    const resetAndNavigate = useResetAndNavigate();
     const { playlist } = useSelector(
         (state: RootState) => state.users.navBarState
     );
@@ -31,6 +33,13 @@ export default function AddPlaylistPopup({
                 setAddPlaylist(false);
             })
             .catch((err) => {
+                if(err.response.data.code == 444){
+                    resetAndNavigate()
+                    failedNotification(
+                        "Your account logged in different location"
+                    );
+                    return;
+                }
                 failedNotification(err.msg);
             });
     };

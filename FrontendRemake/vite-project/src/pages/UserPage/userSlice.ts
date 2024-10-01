@@ -1,6 +1,8 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import axios from "axios";
 import { defaultAlbumImageBase64 } from "../../assets/imageBase64";
+import getDeviceFingerprint from "../../utilities/getDeviceFingerprint";
+import encodeToBase64ForUrl from "../../utilities/base64EncodeForUrl";
 
 const APIurl = import.meta.env.VITE_APIServerUrl;
 
@@ -99,91 +101,118 @@ export interface UserState {
 
 export const fetchUserProfile = createAsyncThunk(
     "user/fetchUserProfile",
-    async () => {
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
+    async (_, { rejectWithValue }) => {
+        try {
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
+            }
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.get(`${APIurl}/api/v1/users`, {
+                headers: {
+                    Authorization: `Bearer ${tokenData.token}`,
+                    Fingerprint: getDeviceFingerprint(),
+                },
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
         }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.get(`${APIurl}/api/v1/users`, {
-            headers: {
-                Authorization: `Bearer ${tokenData.token}`,
-            },
-        });
-        return response.data;
     }
 );
 
 export const fetchUserAvatarImage = createAsyncThunk(
     "user/fetchUserAvatarImage",
-    async () => {
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
+    async (_, { rejectWithValue }) => {
+        try {
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
+            }
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.get(`${APIurl}/api/v1/users/avatar`, {
+                headers: {
+                    Authorization: `Bearer ${tokenData.token}`,
+                    Fingerprint: getDeviceFingerprint(),
+                },
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
         }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.get(`${APIurl}/api/v1/users/avatar`, {
-            headers: {
-                Authorization: `Bearer ${tokenData.token}`,
-            },
-        });
-        return response.data;
     }
 );
 
 export const fetchUserPlaylist = createAsyncThunk(
     "user/fetchUserPlaylist",
-    async () => {
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
+    async (_, { rejectWithValue }) => {
+        try {
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
+            }
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.get(`${APIurl}/api/v1/users/lists`, {
+                headers: {
+                    Authorization: `Bearer ${tokenData.token}`,
+                    Fingerprint: getDeviceFingerprint(),
+                },
+            });
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
         }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.get(`${APIurl}/api/v1/users/lists`, {
-            headers: {
-                Authorization: `Bearer ${tokenData.token}`,
-            },
-        });
-        return response.data;
     }
 );
 
 export const fetchUserBackgroundImage = createAsyncThunk(
     "user/fetchUserBackgroundImage",
-    async () => {
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
+    async (_, { rejectWithValue }) => {
+        try {
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
+            }
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.get(
+                `${APIurl}/api/v1/users/background`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
         }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.get(`${APIurl}/api/v1/users/background`, {
-            headers: {
-                Authorization: `Bearer ${tokenData.token}`,
-            },
-        });
-        return response.data;
     }
 );
 
-//Pending Change
 export const uploadUserSongs = createAsyncThunk(
     "user/uploadSongs",
-    async (fd: FormData) => {
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
-        }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.post(
-            `${APIurl}/api/v1/users/songs/upload/multi`,
-            fd,
-            {
-                headers: {
-                    Authorization: `Bearer ${tokenData.token}`,
-                },
+    async (fd: FormData, { rejectWithValue }) => {
+        try {
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
             }
-        );
-        return response.data;
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.post(
+                `${APIurl}/api/v1/users/songs/upload/multi`,
+                fd,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
     }
 );
 
@@ -202,12 +231,13 @@ export const uploadAvatarImage = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response.data.msg);
+            return rejectWithValue(error.response.data);
         }
     }
 );
@@ -227,12 +257,13 @@ export const uploadBackgroundImage = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response.data.msg);
+            return rejectWithValue(error.response.data);
         }
     }
 );
@@ -254,6 +285,7 @@ export const fetchDeleteAccout = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
@@ -278,6 +310,7 @@ export const fetchUserPlaylistSongs = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
@@ -312,6 +345,7 @@ export const fetchRenameUserPlaylist = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
@@ -330,43 +364,55 @@ interface params {
 
 export const fetchUserSongsByPage = createAsyncThunk(
     "user/fetchUserSongs",
-    async (params: params) => {
-        const { currentPage, sortBy, sortDirection } = params;
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
-        }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.get(
-            `${APIurl}/api/v1/users/songs?pageNo=${currentPage}&sortField=${sortBy}&direction=${sortDirection}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${tokenData.token}`,
-                },
+    async (params: params, { rejectWithValue }) => {
+        try {
+            const { currentPage, sortBy, sortDirection } = params;
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
             }
-        );
-        return response.data;
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.get(
+                `${APIurl}/api/v1/users/songs?pageNo=${currentPage}&sortField=${sortBy}&direction=${sortDirection}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
     }
 );
 
 export const fetchUserFavSongsByPage = createAsyncThunk(
     "user/fetchUserFavSongs",
-    async (params: params) => {
-        const { currentPage, sortBy, sortDirection } = params;
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
-        }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.get(
-            `${APIurl}/api/v1/users/songs/favorites?pageNo=${currentPage}&sortField=${sortBy}&direction=${sortDirection}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${tokenData.token}`,
-                },
+    async (params: params, { rejectWithValue }) => {
+        try {
+            const encodeFingerprint = encodeToBase64ForUrl(getDeviceFingerprint());
+            console.log(encodeFingerprint)
+            const { currentPage, sortBy, sortDirection } = params;
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
             }
-        );
-        return response.data;
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.get(
+                `${APIurl}/api/v1/users/songs/favorites?pageNo=${currentPage}&sortField=${sortBy}&direction=${sortDirection}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response.data);
+        }
     }
 );
 
@@ -380,45 +426,65 @@ interface searchParams {
 
 export const fetchUserSearchSongsByPage = createAsyncThunk(
     "user/fetchUserSearchSongs",
-    async (params: searchParams) => {
-        const { currentPage, searchValue, searchBy, sortBy, sortDirection } =
-            params;
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
-        }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.get(
-            `${APIurl}/api/v1/users/songs/search?${searchBy}=${searchValue}&pageNo=${currentPage}&sortField=${sortBy}&direction=${sortDirection}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${tokenData.token}`,
-                },
+    async (params: searchParams, { rejectWithValue }) => {
+        try {
+            const {
+                currentPage,
+                searchValue,
+                searchBy,
+                sortBy,
+                sortDirection,
+            } = params;
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
             }
-        );
-        return response.data;
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.get(
+                `${APIurl}/api/v1/users/songs/search?${searchBy}=${searchValue}&pageNo=${currentPage}&sortField=${sortBy}&direction=${sortDirection}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            rejectWithValue(error.response.data);
+        }
     }
 );
 
 export const fetchUserSearchFavSongsByPage = createAsyncThunk(
     "user/fetchUserSearchFavSongs",
-    async (params: searchParams) => {
-        const { currentPage, searchValue, searchBy, sortBy, sortDirection } =
-            params;
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            return;
-        }
-        const tokenData = JSON.parse(tokenString);
-        const response = await axios.get(
-            `${APIurl}/api/v1/users/songs/favorites/search?${searchBy}=${searchValue}&pageNo=${currentPage}&sortField=${sortBy}&direction=${sortDirection}`,
-            {
-                headers: {
-                    Authorization: `Bearer ${tokenData.token}`,
-                },
+    async (params: searchParams, { rejectWithValue }) => {
+        try {
+            const {
+                currentPage,
+                searchValue,
+                searchBy,
+                sortBy,
+                sortDirection,
+            } = params;
+            const tokenString = localStorage.getItem("token");
+            if (!tokenString) {
+                return;
             }
-        );
-        return response.data;
+            const tokenData = JSON.parse(tokenString);
+            const response = await axios.get(
+                `${APIurl}/api/v1/users/songs/favorites/search?${searchBy}=${searchValue}&pageNo=${currentPage}&sortField=${sortBy}&direction=${sortDirection}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
+                    },
+                }
+            );
+            return response.data;
+        } catch (error) {
+            rejectWithValue(error.response.data);
+        }
     }
 );
 
@@ -443,11 +509,12 @@ export const fetchAddSongToPlaylist = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
             return response.data;
-        } catch (error: any) {
+        } catch (error) {
             return rejectWithValue(error.response.data);
         }
     }
@@ -468,11 +535,12 @@ export const fetchRemoveSongFromPlaylist = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
             return response.data;
-        } catch (error: any) {
+        } catch (error) {
             return rejectWithValue(error.response.data);
         }
     }
@@ -495,6 +563,7 @@ export const fetchCreatePlaylist = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
@@ -520,6 +589,7 @@ export const fetchDeletePlaylist = createAsyncThunk(
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             );
@@ -708,10 +778,16 @@ const userSlice = createSlice({
                     return ele;
                 }
             );
-            state.favoritePageState.songs =
-                state.favoritePageState.songs.filter((ele) => {
-                    return ele.id != id;
-                });
+            if (favorite) {
+                state.favoritePageState.songs =
+                    state.favoritePageState.songs.filter((ele) => {
+                        return ele.id != id;
+                    });
+            } else {
+                state.favoritePageState.endFetch = false;
+                state.favoritePageState.currentPage = 0;
+                state.favoritePageState.songs = [];
+            }
         },
 
         //fix when add more tab

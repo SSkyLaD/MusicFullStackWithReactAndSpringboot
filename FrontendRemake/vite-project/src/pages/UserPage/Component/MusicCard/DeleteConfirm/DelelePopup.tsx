@@ -5,6 +5,8 @@ import { successNotification, failedNotification } from "../../notification";
 import { Song } from "../../../userSlice";
 import { useDispatch } from "react-redux";
 import userSlice from "../../../userSlice";
+import getDeviceFingerprint from "../../../../../utilities/getDeviceFingerprint";
+import useResetAndNavigate from "../../../../../CustomHook/useResetAndNavigate";
 const APIurl = import.meta.env.VITE_APIServerUrl;
 
 interface DelelePopupParams {
@@ -19,6 +21,7 @@ function DeletePopup({
     songData,
 }: DelelePopupParams) {
     const dispatch = useDispatch();
+    const resetAndNavigate = useResetAndNavigate;
 
     const handleDeleteSong = () => {
         const tokenString = localStorage.getItem("token");
@@ -30,6 +33,7 @@ function DeletePopup({
             .delete(`${APIurl}/api/v1/users/songs/${songData.id}`, {
                 headers: {
                     Authorization: `Bearer ${tokenData.token}`,
+                    Fingerprint: getDeviceFingerprint(),
                 },
             })
             .then(() => {
@@ -39,6 +43,13 @@ function DeletePopup({
                 dispatch(userSlice.actions.handleDeleteSong(songData.id));
             })
             .catch((error) => {
+                if(error.response.data.code == 444){
+                    resetAndNavigate()
+                    failedNotification(
+                        "Your account logged in different location"
+                    );
+                    return;
+                } else
                 failedNotification("Oops... Something went wrong");
                 console.log(error);
             });

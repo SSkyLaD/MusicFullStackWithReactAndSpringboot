@@ -6,6 +6,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.example.dbconnectdemo.dto.SongDto;
 import org.example.dbconnectdemo.dto.SongListDto;
 import org.example.dbconnectdemo.dto.TransferPageObject;
+import org.example.dbconnectdemo.exception.FingerprintMismatchException;
 import org.example.dbconnectdemo.exception.InvalidInputException;
 import org.example.dbconnectdemo.exception.ResourceNotFoundException;
 import org.example.dbconnectdemo.map.SongListMapper;
@@ -55,19 +56,27 @@ public class UserServiceImpl implements UserService {
     private final SongListRepository songlistRepository;
 
     @Override
-    public User getUserData(String username) {
-        return userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
-    }
-
-    @Override
-    public String getUserAvatar(String username) {
+    public User getUserData(String username, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
+        return user;
+    }
+    public String getUserAvatar(String username, String fingerprint) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         return user.getUserAvatar();
     }
 
     @Override
-    public User uploadUserAvatar(String username, MultipartFile file) throws IOException {
+    public User uploadUserAvatar(String username, MultipartFile file, String fingerprint) throws IOException {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         List<String> allowFileType = new ArrayList<>();
         allowFileType.add("image/jpg");
         allowFileType.add("image/png");
@@ -82,14 +91,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String getUserBackground(String username) {
+    public String getUserBackground(String username, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         return user.getUserBackground();
     }
 
     @Override
-    public User uploadUserBackground(String username, MultipartFile file) throws IOException {
+    public User uploadUserBackground(String username, MultipartFile file, String fingerprint) throws IOException {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         List<String> allowFileType = new ArrayList<>();
         allowFileType.add("image/jpg");
         allowFileType.add("image/png");
@@ -105,8 +120,11 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void deleteUser(String username, String inputPassword) {
+    public void deleteUser(String username, String inputPassword, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         if (!passwordEncoder.matches(inputPassword, user.getPassword())) {
             throw new InvalidInputException("Password not match");
         }
@@ -125,8 +143,11 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public TransferPageObject getAllUserSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
+    public TransferPageObject getAllUserSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).ascending());
@@ -144,8 +165,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public TransferPageObject searchAllUserSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name) {
+    public TransferPageObject searchAllUserSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         Pageable paging = null;
 
         if (Objects.equals(direction, "asc")) {
@@ -163,8 +187,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public TransferPageObject searchAllUserSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist) {
+    public TransferPageObject searchAllUserSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
@@ -193,8 +220,11 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public TransferPageObject getAllUserFavoriteSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction) {
+    public TransferPageObject getAllUserFavoriteSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(field).ascending());
@@ -211,8 +241,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public TransferPageObject searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name) {
+    public TransferPageObject searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String name, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
@@ -229,8 +262,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public TransferPageObject searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist) {
+    public TransferPageObject searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize, String sortField, String direction, String artist, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         Pageable paging = null;
         if (Objects.equals(direction, "asc")) {
             paging = PageRequest.of(pageNo, pageSize, Sort.by(sortField).ascending());
@@ -247,8 +283,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public SongDto updateUserFavoriteSong(String username, Long songId, boolean isFavorite) {
+    public SongDto updateUserFavoriteSong(String username, Long songId, boolean isFavorite, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         Song song = songRepository.findByIdAndUserOwnerId(songId, user.getId());
         if (song == null) {
             throw new ResourceNotFoundException("Cannot find song");
@@ -258,8 +297,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<SongDto> addSongsToUser(String username, MultipartFile[] files) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException {
+    public List<SongDto> addSongsToUser(String username, MultipartFile[] files, String fingerprint) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         List<String> allowFileType = new ArrayList<>();
         allowFileType.add("audio/flac");
         allowFileType.add("audio/x-flac");
@@ -329,8 +371,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public SongDto deleteSongFromUser(String username, Long id) {
+    public SongDto deleteSongFromUser(String username, Long id, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         Song song = songRepository.findByIdAndUserOwnerId(id, user.getId());
         if (song == null) {
             throw new ResourceNotFoundException("Cannot find song");
@@ -359,8 +404,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void createUserCustomList(String username, String listName) {
+    public void createUserCustomList(String username, String listName, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         if (user.getUserSongLists().size() >= 5) {
             throw new InvalidInputException("Playlist limit is 5");
         }
@@ -373,8 +421,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<SongListDto> getAllUserCustomLists(String username) {
+    public List<SongListDto> getAllUserCustomLists(String username, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         List<SongListDto> songListDto = new ArrayList<>();
         for (SongList songList : user.getUserSongLists()) {
             songListDto.add(SongListMapper.mapToCustomListDto(songList));
@@ -383,8 +434,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public SongList getUserCustomList(String username, Long id) {
+    public SongList getUserCustomList(String username, Long id, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(), id);
         if (songList == null) {
             throw new ResourceNotFoundException("Playlist not found");
@@ -393,8 +447,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public SongList deleteUserCustomList(String username, Long id) {
+    public SongList deleteUserCustomList(String username, Long id, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(), id);
         if (songList == null) {
             throw new ResourceNotFoundException("Playlist not found");
@@ -404,8 +461,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public SongList updateUserCustomList(String username, Long id, String listName) {
+    public SongList updateUserCustomList(String username, Long id, String listName, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         if (songlistRepository.findByName(listName) != null) {
             throw new InvalidInputException("Playlist name already exists");
         }
@@ -418,8 +478,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String addSongToCustomList(String username, Long listId, Long songId) {
+    public String addSongToCustomList(String username, Long listId, Long songId, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(), listId);
         if (songList == null) {
             throw new InvalidInputException("Playlist not found");
@@ -441,8 +504,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public String removeSongFromCustomList(String username, Long listId, Long songId) {
+    public String removeSongFromCustomList(String username, Long listId, Long songId, String fingerprint) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+        if (!user.getUserFingerPrint().equals(fingerprint)) {
+            throw new FingerprintMismatchException();
+        }
         SongList songList = songlistRepository.findByUserOwnerIdAndId(user.getId(), listId);
         if (songList == null) {
             throw new InvalidInputException("Playlist not found");

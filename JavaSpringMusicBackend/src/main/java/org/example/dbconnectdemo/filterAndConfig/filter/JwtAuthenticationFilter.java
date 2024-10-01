@@ -45,7 +45,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         jwtToken = authHeader.substring(7);
         if(jwtUtility.isTokenExpire(jwtToken)){
-            String jsonResponse = objectMapper.writeValueAsString(new BaseResponse(401, "Expired Token"));
+            String jsonResponse = objectMapper.writeValueAsString(new BaseResponse(445, "Your session has been expired."));
             httpResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             httpResponse.setContentType("application/json");
             httpResponse.getWriter().write(jsonResponse);

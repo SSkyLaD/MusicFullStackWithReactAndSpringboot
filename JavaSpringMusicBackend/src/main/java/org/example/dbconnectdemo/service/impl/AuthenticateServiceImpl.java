@@ -149,11 +149,15 @@ public class AuthenticateServiceImpl implements AuthenticateService {
 
     @Override
     public String verifyLogin(VerifyUserReq verifyUserReq) {
+        System.out.println(verifyUserReq.getDeviceFingerPrint());
         if(verifyUserReq.getUsername() == null || verifyUserReq.getUsername().isEmpty()) {
             throw new InvalidInputException("Username cannot be blank");
         }
         if(verifyUserReq.getVerificationCode() == null || verifyUserReq.getVerificationCode().length() != 6) {
             throw new InvalidInputException("Verification code invalid");
+        }
+        if(verifyUserReq.getDeviceFingerPrint() == null || verifyUserReq.getDeviceFingerPrint().isEmpty() || verifyUserReq.getDeviceFingerPrint().split("\\|").length !=8) {
+            throw new InvalidInputException("Fingerprint invalid");
         }
         User user = userRepository.findByUsername(verifyUserReq.getUsername()).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
         UserOtp userOtp = user.getUserOtp();
@@ -165,6 +169,7 @@ public class AuthenticateServiceImpl implements AuthenticateService {
         }
         userOtp.setVerificationCodeExpireAt(null);
         userOtp.setVerificationCode(null);
+        user.setUserFingerPrint(verifyUserReq.getDeviceFingerPrint());
         userRepository.save(user);
         return jwtUtility.generateToken(user);
     }

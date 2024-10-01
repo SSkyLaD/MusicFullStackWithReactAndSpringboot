@@ -34,6 +34,8 @@ public class AppUser implements UserDetails {
     @CreationTimestamp
     protected Date createDate;
 
+    private String userFingerPrint;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));

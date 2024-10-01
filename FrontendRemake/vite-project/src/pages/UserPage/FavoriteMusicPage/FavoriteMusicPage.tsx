@@ -1,5 +1,5 @@
 import "./Favorite.scss";
-import React, {useState, useRef} from "react";
+import React, { useState, useRef } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faMagnifyingGlass,
@@ -9,22 +9,29 @@ import {
 import Empty from "../Component/Empty/Empty";
 import MusicCard from "../Component/MusicCard/MusicCard";
 import Loading from "../../../assets/Loading/Loading";
-import userSlice, { fetchUserFavSongsByPage, fetchUserSearchFavSongsByPage } from "../userSlice";
+import userSlice, {
+    fetchUserFavSongsByPage,
+    fetchUserSearchFavSongsByPage,
+} from "../userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
+import { failedNotification } from "../Component/notification";
+import useResetAndNavigate from "../../../CustomHook/useResetAndNavigate";
 
 export default function Favorite() {
-    const {favoritePageState} = useSelector(
+    const { favoritePageState } = useSelector(
         (state: RootState) => state.users
     );
     const dispatch = useDispatch<AppDispatch>();
+    const resetAndNavigate = useResetAndNavigate();
 
     const [showFilter, setShowFilter] = useState(false);
     const [timeoutId, setTimeoutId] = useState<number>();
     const filterOptionRef = useRef<HTMLDivElement | null>(null);
 
-    const { songs, currentPage, endFetch  } = favoritePageState;
-    const { searchValue, searchBy, sortBy, sortDirection } = favoritePageState.filter;
+    const { songs, currentPage, endFetch } = favoritePageState;
+    const { searchValue, searchBy, sortBy, sortDirection } =
+        favoritePageState.filter;
 
     const handleFilterChange = () => {
         dispatch(userSlice.actions.resetCurrentPageFavPage());
@@ -46,9 +53,7 @@ export default function Favorite() {
         }
 
         const newTimeoutId = setTimeout(() => {
-            dispatch(
-                userSlice.actions.setSearchValueInFavPage(inputFiltered)
-            );
+            dispatch(userSlice.actions.setSearchValueInFavPage(inputFiltered));
             handleFilterChange();
         }, 500); // Delay 0.5s
 
@@ -66,8 +71,21 @@ export default function Favorite() {
         if (!endFetch) {
             if (!searchValue) {
                 dispatch(
-                    fetchUserFavSongsByPage({ currentPage, sortBy, sortDirection })
-                );
+                    fetchUserFavSongsByPage({
+                        currentPage,
+                        sortBy,
+                        sortDirection,
+                    })
+                )
+                    .unwrap()
+                    .catch((err) => {
+                        if (err.code == 444) {
+                            resetAndNavigate();
+                            failedNotification(
+                                "Your account logged in different location"
+                            );
+                        }
+                    });
             }
             if (searchValue) {
                 dispatch(
@@ -78,15 +96,26 @@ export default function Favorite() {
                         sortBy,
                         sortDirection,
                     })
-                );
+                )
+                    .unwrap()
+                    .catch((err) => {
+                        if (err.code == 444) {
+                            resetAndNavigate();
+                            failedNotification(
+                                "Your account logged in different location"
+                            );
+                        }
+                    });
             }
         }
     }, [currentPage, endFetch, searchValue, searchBy, sortBy, sortDirection]);
 
-
     React.useEffect(() => {
-        const handler = (e : MouseEvent) => {
-            if (filterOptionRef.current && !filterOptionRef.current.contains(e.target as Node)) {
+        const handler = (e: MouseEvent) => {
+            if (
+                filterOptionRef.current &&
+                !filterOptionRef.current.contains(e.target as Node)
+            ) {
                 setShowFilter(false);
             }
         };
@@ -305,7 +334,7 @@ export default function Favorite() {
                     </div>
                 </div>
             </div>
-            {songs.length === 0 && !endFetch ? (
+            {songs.length === 0 && endFetch ? (
                 <div className="bottom-section">
                     <Empty />
                 </div>

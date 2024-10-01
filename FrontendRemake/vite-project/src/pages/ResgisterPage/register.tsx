@@ -127,6 +127,7 @@ export default function RegisterPage() {
                                 placeholder="Username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
+                                autoFocus
                             />
                         </div>
                         <div className="email text-container">

@@ -24,6 +24,8 @@ import { fetchRemoveSongFromPlaylist, Song } from "../../userSlice";
 import userSlice from "../../userSlice";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../../../redux/store";
+import useResetAndNavigate from "../../../../CustomHook/useResetAndNavigate";
+import getDeviceFingerprint from "../../../../utilities/getDeviceFingerprint";
 const APIurl = import.meta.env.VITE_APIServerUrl;
 
 interface MusicCardPrams {
@@ -33,6 +35,7 @@ interface MusicCardPrams {
 
 export default function MusicCard({ songData, playlistId }: MusicCardPrams) {
     const dispatch = useDispatch<AppDispatch>();
+    const resetAndNavigate = useResetAndNavigate();
 
     const [moreButton, setMoreButton] = React.useState(false);
     const [addPLaylist, setAddPlaylist] = React.useState(false);
@@ -53,6 +56,7 @@ export default function MusicCard({ songData, playlistId }: MusicCardPrams) {
             .get(`${APIurl}/api/v1/users/songs/download/${data.id}`, {
                 headers: {
                     Authorization: `Bearer ${tokenData.token}`,
+                    Fingerprint: getDeviceFingerprint(),
                 },
                 responseType: "blob",
             })
@@ -78,10 +82,17 @@ export default function MusicCard({ songData, playlistId }: MusicCardPrams) {
                 );
             })
             .catch((error) => {
-                console.error("Error downloading file:", error);
-                failedNotification(
-                    `Have error when downloading: ${data.name} - ${data.artist}`
-                );
+                if (error.response.data.code == 444) {
+                    resetAndNavigate();
+                    failedNotification(
+                        "Your account logged in different location"
+                    );
+                    return;
+                } else {
+                    failedNotification(
+                        `Have error when downloading: ${data.name} - ${data.artist}`
+                    );
+                }
             });
     };
 
@@ -101,6 +112,7 @@ export default function MusicCard({ songData, playlistId }: MusicCardPrams) {
                 {
                     headers: {
                         Authorization: `Bearer ${tokenData.token}`,
+                        Fingerprint: getDeviceFingerprint(),
                     },
                 }
             )
@@ -119,11 +131,20 @@ export default function MusicCard({ songData, playlistId }: MusicCardPrams) {
                 );
             })
             .catch((error) => {
-                failedNotification("Oops... Something went wrong");
-                console.log(error);
+                if (error.response.data.code == 444) {
+                    resetAndNavigate();
+                    failedNotification(
+                        "Your account logged in different location"
+                    );
+                    return;
+                } else {
+                    failedNotification("Oops... Something went wrong");
+                    console.log(error);
+                }
             });
     };
 
+    //Nên sử dụng thunk
     const handleRemoveFromPlaylist = (playlistId: number, songId: number) => {
         dispatch(fetchRemoveSongFromPlaylist({ playlistId, songId }))
             .unwrap()
@@ -131,6 +152,13 @@ export default function MusicCard({ songData, playlistId }: MusicCardPrams) {
                 successNotification(res.msg);
             })
             .catch((err) => {
+                if (err.response.data.code == 444) {
+                    resetAndNavigate();
+                    failedNotification(
+                        "Your account logged in different location"
+                    );
+                    return;
+                }
                 failedNotification(err.msg);
             });
     };

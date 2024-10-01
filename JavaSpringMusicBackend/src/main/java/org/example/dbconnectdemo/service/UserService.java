@@ -18,49 +18,49 @@ import java.io.IOException;
 import java.util.List;
 
 public interface UserService{
-    User getUserData(String username);
+    User getUserData(String username, String fingerprint);
 
-    String getUserAvatar(String username);
+    String getUserAvatar(String username, String fingerprint);
 
-    User uploadUserAvatar(String username, MultipartFile file) throws IOException;
+    User uploadUserAvatar(String username, MultipartFile file, String fingerprint) throws IOException;
 
-    String getUserBackground(String username);
+    String getUserBackground(String username, String fingerprint);
 
-    User uploadUserBackground(String username, MultipartFile file) throws IOException;
+    User uploadUserBackground(String username, MultipartFile file, String fingerprint) throws IOException;
 
-    void deleteUser(String username, String inputPassword);
+    void deleteUser(String username, String inputPassword, String fingerprint);
 
-    TransferPageObject getAllUserSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction);
+    TransferPageObject getAllUserSongsWithSortAndPaging(String username, int pageNo, int pageSize, String field, String direction, String fingerprint);
 
-    TransferPageObject searchAllUserSongsLikeNameWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name);
+    TransferPageObject searchAllUserSongsLikeNameWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name, String fingerprint);
 
-    TransferPageObject searchAllUserSongsLikeArtistWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name);
+    TransferPageObject searchAllUserSongsLikeArtistWithSortAndPaging(String username,int pageNo,int pageSize,String sortField, String direction, String name, String fingerprint);
 
     Song getUserSong(String username, Long songId);
 
-    TransferPageObject getAllUserFavoriteSongsWithSortAndPaging(String username,int pageNo,int pageSize, String field, String direction);
+    TransferPageObject getAllUserFavoriteSongsWithSortAndPaging(String username,int pageNo,int pageSize, String field, String direction, String fingerprint);
 
-    TransferPageObject searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name);
+    TransferPageObject searchAllUserFavoriteSongsLikeNameWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name, String fingerprint);
 
-    TransferPageObject searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name);
+    TransferPageObject searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(String username, int pageNo, int pageSize,String sortField, String direction, String name, String fingerprint);
 
-    SongDto updateUserFavoriteSong(String username, Long songId, boolean isFavorite);
+    SongDto updateUserFavoriteSong(String username, Long songId, boolean isFavorite, String fingerprint);
 
-    List<SongDto> addSongsToUser(String username, MultipartFile[] files) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException;
+    List<SongDto> addSongsToUser(String username, MultipartFile[] files, String fingerprint) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException;
 
-    SongDto deleteSongFromUser(String username, Long id);
+    SongDto deleteSongFromUser(String username, Long id, String fingerprint);
 
-    void createUserCustomList(String username, String listName);
+    void createUserCustomList(String username, String listName, String fingerprint);
 
-    List<SongListDto> getAllUserCustomLists(String username);
+    List<SongListDto> getAllUserCustomLists(String username, String fingerprint);
 
-    SongList getUserCustomList(String username, Long id);
+    SongList getUserCustomList(String username, Long id, String fingerprint);
 
-    SongList deleteUserCustomList(String username, Long id);
+    SongList deleteUserCustomList(String username, Long id, String fingerprint);
 
-    SongList updateUserCustomList(String username, Long id, String listName);
+    SongList updateUserCustomList(String username, Long id, String listName, String fingerprint);
 
-    String addSongToCustomList(String username, Long listId, Long songId);
+    String addSongToCustomList(String username, Long listId, Long songId, String fingerprint);
 
-    String removeSongFromCustomList(String username, Long listId, Long songId);
+    String removeSongFromCustomList(String username, Long listId, Long songId, String fingerprint);
 }

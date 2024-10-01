@@ -3,14 +3,13 @@ package org.example.dbconnectdemo.utilities;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.dbconnectdemo.model.Song;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.security.MessageDigest;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+@Component
 public class GeneralUtility {
 
     public static void sortSongs(List<Song> songs, String field, String direction){
@@ -54,16 +53,17 @@ public class GeneralUtility {
         }
     }
 
-    public static Map<String, String> convertJsonToMap(String jsonString) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, String> resultMap = null;
+    public static String base64UrlDecode(String base64Raw) {
+        String base64 = base64Raw.replace('-', '+').replace('_', '/');
 
-        try {
-            resultMap = objectMapper.readValue(jsonString, new TypeReference<Map<String, String>>() {});
-        } catch (IOException e) {
-            e.printStackTrace();
+        switch (base64.length() % 4) {
+            case 2: base64 += "=="; break;
+            case 3: base64 += "="; break;
         }
 
-        return resultMap;
+        byte[] decodedBytes = Base64.getDecoder().decode(base64);
+        return new String(decodedBytes);
     }
 }
+
+

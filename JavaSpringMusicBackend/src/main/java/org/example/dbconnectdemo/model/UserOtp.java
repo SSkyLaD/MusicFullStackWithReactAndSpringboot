@@ -25,8 +25,6 @@ public class UserOtp {
 
     private LocalDateTime verificationCodeExpireAt;
 
-    private String userFingerPrint;
-
     public void generateVerificationCode() {
         Random rnd = new Random();
         int number = rnd.nextInt(999999);

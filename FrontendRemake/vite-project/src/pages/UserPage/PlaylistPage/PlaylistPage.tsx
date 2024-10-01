@@ -17,6 +17,7 @@ import {
     failedNotification,
     successNotification,
 } from "../Component/notification";
+import useResetAndNavigate from "../../../CustomHook/useResetAndNavigate";
 
 export default function PlaylistPage() {
     const { id } = useParams<{ id: string }>();
@@ -29,6 +30,7 @@ export default function PlaylistPage() {
         (state: RootState) => state.users.navBarState
     );
     const navigate = useNavigate();
+    const resetAndNavigate = useResetAndNavigate();
 
     const selectedPlaylist = playlist.find((ele) => ele.id === parseInt(id!));
     const playlistData = navBarState.playlist.find(
@@ -48,8 +50,13 @@ export default function PlaylistPage() {
             dispatch(fetchUserPlaylistSongs(parseInt(id!)))
                 .unwrap()
                 .then(() => setIsLoading(false))
-                .catch(() => {
-                    
+                .catch((err) => {
+                    if (err.code == 444) {
+                        resetAndNavigate();
+                        failedNotification(
+                            "Your account logged in different location"
+                        );
+                    }
                 });
         }
     });
@@ -68,37 +75,53 @@ export default function PlaylistPage() {
         if (e.key === "Enter") {
             const playlistId = parseInt(id!);
             const newPlaylistName = nameOfList;
+            if(newPlaylistName.length > 15){
+                failedNotification("Playlist name less than 15 character")
+                return;
+            }
             setPendingRename(true);
             dispatch(fetchRenameUserPlaylist({ playlistId, newPlaylistName }))
                 .unwrap()
                 .then((res) => {
-                    setPendingRename(false)
+                    setPendingRename(false);
                     setIsEditingName(false);
                     successNotification(res.msg);
                 })
                 .catch((err) => {
-                    setPendingRename(false)
-                    setIsEditingName(false);
-                    failedNotification(err.msg);
+                    if(err.code == 444){
+                        resetAndNavigate();
+                        failedNotification("Your account logged in different location");
+                    }
+                    else{
+                        setPendingRename(false);
+                        setIsEditingName(false);
+                        failedNotification(err.msg);
+                    }
                 });
         }
     };
 
-    const handleDeletePlaylist = () =>{
+    const handleDeletePlaylist = () => {
         const playlistId = parseInt(id!);
         setPendingDelete(true);
         dispatch(fetchDeletePlaylist(playlistId))
-        .unwrap()
-        .then((res)=>{
-            setPendingDelete(false);
-            successNotification(res.msg);
-            navigate("/user/home");
-        })
-        .catch((err)=>{
-            setPendingDelete(false);
-            failedNotification(err.msg);
-        })
-    }
+            .unwrap()
+            .then((res) => {
+                setPendingDelete(false);
+                successNotification(res.msg);
+                navigate("/user/home");
+            })
+            .catch((err) => {
+                if(err.code == 444){
+                    resetAndNavigate();
+                    failedNotification("Your account logged in different location");
+                }
+                else{
+                    setPendingDelete(false);
+                    failedNotification(err.msg);
+                }
+            });
+    };
 
     const handlePlayAll = () => {
         dispatch(userSlice.actions.handlePlayAll(selectedPlaylist?.songs));
@@ -145,7 +168,10 @@ export default function PlaylistPage() {
                         >
                             <FontAwesomeIcon icon={faPencil} />
                         </button>
-                        <button disabled={pendingDelete} onClick={() => handleDeletePlaylist()}>
+                        <button
+                            disabled={pendingDelete}
+                            onClick={() => handleDeletePlaylist()}
+                        >
                             <FontAwesomeIcon icon={faTrash} />
                         </button>
                     </div>

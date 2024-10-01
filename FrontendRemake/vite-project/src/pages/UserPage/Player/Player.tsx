@@ -11,10 +11,17 @@ import {
     faVolumeXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import "./Player.scss";
-import { notification } from "../Component/notification.tsx";
+import {
+    failedNotification,
+    notification,
+} from "../Component/notification.tsx";
 import { useDispatch, useSelector } from "react-redux";
 import userSlice from "../userSlice.ts";
 import { RootState, AppDispatch } from "../../../redux/store";
+import axios from "axios";
+import getDeviceFingerprint from "../../../utilities/getDeviceFingerprint.ts";
+import encodeToBase64ForUrl from "../../../utilities/base64EncodeForUrl.ts";
+import useResetAndNavigate from "../../../CustomHook/useResetAndNavigate.ts";
 const api = import.meta.env.VITE_APIServerUrl;
 
 export default function Player() {
@@ -30,6 +37,8 @@ export default function Player() {
         (state: RootState) => state.users.playerState
     );
     const dispatch = useDispatch<AppDispatch>();
+
+    const resetAndNavigate = useResetAndNavigate();
 
     const audioRef = React.useRef(null);
 
@@ -183,19 +192,39 @@ export default function Player() {
 
     // khi playSong thay đổi thì bài hát tự động được nạp vào player và chạy
     React.useEffect(() => {
-        if (currentSong.id != -1) {
+        if (currentSong.id !== -1) {
             const tokenString = localStorage.getItem("token");
             if (!tokenString) {
                 return;
             }
+
             const tokenData = JSON.parse(tokenString);
             const song = document.querySelector(".song") as HTMLAudioElement;
-            song.src = `${api}/api/v1/users/songs/stream/${tokenData.token}/${currentSong.id}`;
-            setPlayerData((prev) => {
-                return { ...prev, isPlayed: true };
-            });
+
+            const audioUrl = `${api}/api/v1/users/songs/stream/${
+                tokenData.token
+            }/${currentSong.id}/${encodeToBase64ForUrl(
+                getDeviceFingerprint()
+            )}`;
+
+            axios
+                .get(audioUrl)
+                .then(() => {
+                    song.src = audioUrl;
+                    setPlayerData((prev) => {
+                        return { ...prev, isPlayed: true };
+                    });
+                })
+                .catch((err) => {
+                    if (err.response.status == 444) {
+                        failedNotification(
+                            "Your account logged in different location"
+                        );
+                        resetAndNavigate();
+                    }
+                });
         }
-    }, [currentSong]);
+    }, [currentSong, api, setPlayerData]);
 
     React.useEffect(() => {
         if ("mediaSession" in navigator) {

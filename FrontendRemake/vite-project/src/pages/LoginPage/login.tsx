@@ -10,13 +10,12 @@ import {
     faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import "./login.scss";
-import sha256 from "../../utilities/checkSumHash";
-
+import OTPInput from "./OTPInputPage/OTPInput";
 const APIurl = import.meta.env.VITE_APIServerUrl;
-const FRONTEND_ID_KEY = import.meta.env.VITE_FRONTEND_ID_KEY;
 
 export default function LoginPage() {
     const navigate = useNavigate();
+    const [showOtpInput, setShowOtp] = React.useState(false);
     const [username, setUsername] = React.useState("");
     const [password, setPassword] = React.useState("");
     const [message, setMessage] = React.useState<JSX.Element>();
@@ -63,40 +62,36 @@ export default function LoginPage() {
             );
         }
 
-        const combineParam = `${username}|${password}|${FRONTEND_ID_KEY}`;
-
-        sha256(combineParam).then((checkSum) => {
-            axios
-                .post(`${APIurl}/api/v1/auth/login`, {
-                    username: username,
-                    password: password,
-                    checkSum: checkSum,
-                })
-                .then((res) => {
-                    setLoading(false);
-                    localStorage.setItem(
-                        "token",
-                        JSON.stringify(res.data.data)
-                    );
-                    navigate("/user");
-                    setMessage(
-                        <p style={{ color: "#7FDF4BFF" }}>{res.data.msg}</p>
-                    );
-                    setUsername("");
-                    setPassword("");
-                })
-                .catch((error) => {
-                    setLoading(false);
+        axios
+            .post(`${APIurl}/api/v1/auth/loginV2`, {
+                username: username,
+                password: password,
+            })
+            .then((res) => {
+                if (res.data.code == 200) {
+                    setShowOtp(true);
+                }
+            })
+            .catch((error) => {
+                setLoading(false);
+                if(error.response != undefined){
                     setMessage(
                         <p style={{ color: "#E5342FFF" }}>
                             {error.response.data.msg}
                         </p>
                     );
-                    setTimeout(() => {
-                        setMessage(<></>);
-                    }, 10000);
-                });
-        });
+                }
+                else{
+                    setMessage(
+                        <p style={{ color: "#E5342FFF" }}>
+                            Network Error
+                        </p>
+                    );
+                }
+                setTimeout(() => {
+                    setMessage(<></>);
+                }, 10000);
+            });
     };
 
     return (
@@ -118,6 +113,7 @@ export default function LoginPage() {
                                 placeholder="Username"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
+                                autoFocus
                             />
                         </div>
                         <div className="password text-container">
@@ -133,7 +129,9 @@ export default function LoginPage() {
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
-                        <button>
+                        <button 
+                            disabled = {loading} 
+                        >
                             {loading ? (
                                 <FontAwesomeIcon
                                     className="spinner"
@@ -153,6 +151,7 @@ export default function LoginPage() {
                     </p>
                 </div>
             </div>
+            {showOtpInput ? <OTPInput username={username} /> : ""}
         </div>
     );
 }

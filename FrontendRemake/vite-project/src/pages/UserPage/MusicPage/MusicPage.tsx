@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
 import "./Music.scss";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -15,16 +14,19 @@ import Empty from "../Component/Empty/Empty";
 import MusicCard from "../Component/MusicCard/MusicCard";
 import Loading from "../../../assets/Loading/Loading";
 import { useSelector, useDispatch } from "react-redux";
-import userSlice, { fetchUserSearchSongsByPage } from "../userSlice";
+import userSlice, {
+    fetchUserSearchSongsByPage,
+    uploadUserSongs,
+} from "../userSlice";
 import { RootState, AppDispatch } from "../../../redux/store";
-
-const APIurl = import.meta.env.VITE_APIServerUrl;
+import useResetAndNavigate from "../../../CustomHook/useResetAndNavigate";
 
 export default function Music() {
     const musicPage = useSelector(
         (state: RootState) => state.users.musicPageState
     );
     const dispatch = useDispatch<AppDispatch>();
+    const resetAndNavigate = useResetAndNavigate();
 
     const [showFilter, setShowFilter] = useState(false);
     const [uploadedFiles, setUploadedFiles] = useState<FileList | null>(null);
@@ -94,31 +96,54 @@ export default function Music() {
             fd.append("files", uploadedFiles[i]);
         }
 
-        const tokenString = localStorage.getItem("token");
-        if (!tokenString) {
-            failedNotification("Something wrong...");
-            return;
-        }
-        const tokenData = JSON.parse(tokenString);
-
-        axios
-            .post(`${APIurl}/api/v1/users/songs/upload/multi`, fd, {
-                headers: {
-                    Authorization: `Bearer ${tokenData.token}`,
-                },
-            })
+        dispatch(uploadUserSongs(fd))
+            .unwrap()
             .then((res) => {
                 successNotification("File uploaded successfully");
                 setUploadedFiles(null);
                 inputFileRef.current!.value = "";
-                dispatch(userSlice.actions.addSongsInMusicPage(res.data.data));
+                dispatch(userSlice.actions.addSongsInMusicPage(res.data));
             })
             .catch((err) => {
-                failedNotification(err.response.data.msg);
-                console.log(err);
-                setUploadedFiles(null);
-                inputFileRef.current!.value = "";
+                if (err.code == 444) {
+                    resetAndNavigate();
+                    failedNotification(
+                        "Your account logged in different location"
+                    );
+                }
             });
+
+        // const fd = new FormData();
+        // for (let i = 0; i < uploadedFiles.length; i++) {
+        //     fd.append("files", uploadedFiles[i]);
+        // }
+
+        // const tokenString = localStorage.getItem("token");
+        // if (!tokenString) {
+        //     failedNotification("Something wrong...");
+        //     return;
+        // }
+        // const tokenData = JSON.parse(tokenString);
+
+        // axios
+        //     .post(`${APIurl}/api/v1/users/songs/upload/multi`, fd, {
+        //         headers: {
+        //             Authorization: `Bearer ${tokenData.token}`,
+        //             Fingerprint: getDeviceFingerprint(),
+        //         },
+        //     })
+        //     .then((res) => {
+        //         successNotification("File uploaded successfully");
+        //         setUploadedFiles(null);
+        //         inputFileRef.current!.value = "";
+        //         dispatch(userSlice.actions.addSongsInMusicPage(res.data.data));
+        //     })
+        //     .catch((err) => {
+        //         failedNotification(err.response.data.msg);
+        //         console.log(err);
+        //         setUploadedFiles(null);
+        //         inputFileRef.current!.value = "";
+        //     });
     };
 
     const handlePlayAll = () => {
@@ -138,7 +163,16 @@ export default function Music() {
                     sortBy,
                     sortDirection,
                 })
-            );
+            )
+            .unwrap()
+            .catch((err) => {
+                if (err.code == 444) {
+                    resetAndNavigate();
+                    failedNotification(
+                        "Your account logged in different location"
+                    );
+                }
+            });
         }
     }, [currentPage, searchValue, searchBy, sortBy, sortDirection]);
 
@@ -175,7 +209,11 @@ export default function Music() {
                             <p>Play All This Page </p>
                         </button>
 
-                        {totalSongs != null ? <p>Total Songs : {totalSongs}</p> : <Loading />}
+                        {totalSongs != null ? (
+                            <p>Total Songs : {totalSongs}</p>
+                        ) : (
+                            <Loading />
+                        )}
                     </div>
                 </div>
                 <div className="search">
@@ -376,6 +414,7 @@ export default function Music() {
                     <input
                         type="file"
                         multiple
+                        accept=".mp3, .flac"
                         ref={inputFileRef}
                         onChange={handleFileChange}
                     />
@@ -398,21 +437,23 @@ export default function Music() {
             {fetchCurrentPageStatus === "success" && (
                 <div className="music-list-container">
                     <div className="music-card-container">{songCards}</div>
-                    <div className="pagination">
-                        {Array.from({ length: totalPage }, (_, i) => (
-                            <button
-                                className={
-                                    currentPage === i
-                                        ? "selected-page-button"
-                                        : "page-button"
-                                }
-                                key={i}
-                                onClick={() => handlePageSelect(i)}
-                            >
-                                {i + 1}
-                            </button>
-                        ))}
-                    </div>
+                    {totalPage! > 1 && (
+                        <div className="pagination">
+                            {Array.from({ length: totalPage }, (_, i) => (
+                                <button
+                                    className={
+                                        currentPage === i
+                                            ? "selected-page-button"
+                                            : "page-button"
+                                    }
+                                    key={i}
+                                    onClick={() => handlePageSelect(i)}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
         </div>
