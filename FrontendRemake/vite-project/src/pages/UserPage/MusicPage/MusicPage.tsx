@@ -40,7 +40,6 @@ export default function Music() {
         fetchCurrentPageStatus,
         totalPage,
         totalSongs,
-        songs,
     } = musicPage;
 
     const handleFilterChange = () => {
@@ -112,42 +111,6 @@ export default function Music() {
                     );
                 }
             });
-
-        // const fd = new FormData();
-        // for (let i = 0; i < uploadedFiles.length; i++) {
-        //     fd.append("files", uploadedFiles[i]);
-        // }
-
-        // const tokenString = localStorage.getItem("token");
-        // if (!tokenString) {
-        //     failedNotification("Something wrong...");
-        //     return;
-        // }
-        // const tokenData = JSON.parse(tokenString);
-
-        // axios
-        //     .post(`${APIurl}/api/v1/users/songs/upload/multi`, fd, {
-        //         headers: {
-        //             Authorization: `Bearer ${tokenData.token}`,
-        //             Fingerprint: getDeviceFingerprint(),
-        //         },
-        //     })
-        //     .then((res) => {
-        //         successNotification("File uploaded successfully");
-        //         setUploadedFiles(null);
-        //         inputFileRef.current!.value = "";
-        //         dispatch(userSlice.actions.addSongsInMusicPage(res.data.data));
-        //     })
-        //     .catch((err) => {
-        //         failedNotification(err.response.data.msg);
-        //         console.log(err);
-        //         setUploadedFiles(null);
-        //         inputFileRef.current!.value = "";
-        //     });
-    };
-
-    const handlePlayAll = () => {
-        dispatch(userSlice.actions.handlePlayAll(songs));
     };
 
     useEffect(() => {
@@ -174,7 +137,7 @@ export default function Music() {
                 }
             });
         }
-    }, [currentPage, searchValue, searchBy, sortBy, sortDirection]);
+    }, [currentPage, searchValue, searchBy, sortBy, sortDirection, fetchCurrentPageStatus]);
 
     useEffect(() => {
         const handleEvent = (e: MouseEvent) => {
@@ -203,13 +166,13 @@ export default function Music() {
                                     ? true
                                     : false
                             }
-                            onClick={handlePlayAll}
+                            // onClick={handlePlayAll}
                         >
                             <FontAwesomeIcon icon={faPlay} />
-                            <p>Play All This Page </p>
+                            {/* <p>Play All This Page </p> */}
                         </button>
 
-                        {totalSongs != null ? (
+                        {fetchCurrentPageStatus == "success" ? (
                             <p>Total Songs : {totalSongs}</p>
                         ) : (
                             <Loading />
@@ -439,7 +402,7 @@ export default function Music() {
                     <div className="music-card-container">{songCards}</div>
                     {totalPage! > 1 && (
                         <div className="pagination">
-                            {Array.from({ length: totalPage }, (_, i) => (
+                            {Array.from({ length: totalPage! }, (_, i) => (
                                 <button
                                     className={
                                         currentPage === i

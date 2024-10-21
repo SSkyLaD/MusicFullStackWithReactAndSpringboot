@@ -40,7 +40,7 @@ function DeletePopup({
                 successNotification(
                     `${songData.name} - ${songData.artist} DELETED successfully`
                 );
-                dispatch(userSlice.actions.handleDeleteSong(songData.id));
+                dispatch(userSlice.actions.handleDeleteSong());
             })
             .catch((error) => {
                 if(error.response.data.code == 444){

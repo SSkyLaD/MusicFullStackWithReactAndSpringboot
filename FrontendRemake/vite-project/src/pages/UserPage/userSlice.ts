@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { defaultAlbumImageBase64 } from "../../assets/imageBase64";
 import getDeviceFingerprint from "../../utilities/getDeviceFingerprint";
 import encodeToBase64ForUrl from "../../utilities/base64EncodeForUrl";
@@ -82,10 +82,12 @@ export interface UserState {
     };
 
     favoritePageState: {
+        totalSongs: number | null;
+        totalPage: number | null;
         songs: Song[];
         filter: Filter;
         currentPage: number;
-        endFetch: boolean;
+        fetchCurrentPageStatus: "idle" | "pending" | "success" | "failed";
     };
 
     playListState: PlaylistState[];
@@ -115,8 +117,12 @@ export const fetchUserProfile = createAsyncThunk(
                 },
             });
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -137,8 +143,12 @@ export const fetchUserAvatarImage = createAsyncThunk(
                 },
             });
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -159,8 +169,12 @@ export const fetchUserPlaylist = createAsyncThunk(
                 },
             });
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -184,8 +198,12 @@ export const fetchUserBackgroundImage = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -210,8 +228,12 @@ export const uploadUserSongs = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -236,8 +258,12 @@ export const uploadAvatarImage = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -262,8 +288,12 @@ export const uploadBackgroundImage = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -290,8 +320,12 @@ export const fetchDeleteAccout = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -315,8 +349,12 @@ export const fetchUserPlaylistSongs = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error: any) {
-            return rejectWithValue(error.response.data.msg);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -350,8 +388,12 @@ export const fetchRenameUserPlaylist = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -382,8 +424,12 @@ export const fetchUserSongsByPage = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -392,8 +438,10 @@ export const fetchUserFavSongsByPage = createAsyncThunk(
     "user/fetchUserFavSongs",
     async (params: params, { rejectWithValue }) => {
         try {
-            const encodeFingerprint = encodeToBase64ForUrl(getDeviceFingerprint());
-            console.log(encodeFingerprint)
+            const encodeFingerprint = encodeToBase64ForUrl(
+                getDeviceFingerprint()
+            );
+            console.log(encodeFingerprint);
             const { currentPage, sortBy, sortDirection } = params;
             const tokenString = localStorage.getItem("token");
             if (!tokenString) {
@@ -410,8 +458,12 @@ export const fetchUserFavSongsByPage = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -450,8 +502,12 @@ export const fetchUserSearchSongsByPage = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -482,8 +538,12 @@ export const fetchUserSearchFavSongsByPage = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -514,8 +574,12 @@ export const fetchAddSongToPlaylist = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -540,8 +604,12 @@ export const fetchRemoveSongFromPlaylist = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -568,9 +636,12 @@ export const fetchCreatePlaylist = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (error: any) {
-            console.log(error);
-            return rejectWithValue(error.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -594,8 +665,12 @@ export const fetchDeletePlaylist = createAsyncThunk(
                 }
             );
             return response.data;
-        } catch (err: any) {
-            return rejectWithValue(err.response.data);
+        } catch (error: unknown) {
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data);
+            } else {
+                return rejectWithValue("An unexpected error occurred");
+            }
         }
     }
 );
@@ -635,6 +710,8 @@ const initialState: UserState = {
     },
 
     favoritePageState: {
+        totalPage: null,
+        totalSongs: null,
         songs: [],
         filter: {
             searchValue: "",
@@ -642,7 +719,7 @@ const initialState: UserState = {
             sortBy: "uploadDate",
             sortDirection: "asc",
         },
-        endFetch: false,
+        fetchCurrentPageStatus: "idle",
         currentPage: 0,
     },
 
@@ -735,18 +812,14 @@ const userSlice = createSlice({
             state.favoritePageState.songs = [];
         },
 
-        setEndFetchInFavPage: (state, action) => {
-            state.favoritePageState.endFetch = action.payload;
+        setFetchStatusFavPage: (state) => {
+            state.favoritePageState.fetchCurrentPageStatus = "idle";
         },
 
-        resetCurrentPageFavPage: (state) => {
-            state.favoritePageState.currentPage = 0;
+        setCurrentPageFavPage: (state, action) => {
+            state.favoritePageState.currentPage = action.payload;
         },
 
-        increaseCurrentPageFavPage: (state) => {
-            state.favoritePageState.currentPage =
-                state.favoritePageState.currentPage + 1;
-        },
         setSearchValueInFavPage: (state, action: PayloadAction<string>) => {
             state.favoritePageState.filter.searchValue = action.payload;
         },
@@ -766,37 +839,24 @@ const userSlice = createSlice({
 
         //fix when add more tab
         handleFavoriteToggle: (state, action) => {
-            const { id, favorite } = action.payload;
             state.musicPageState.songs = state.musicPageState.songs.map(
-                (ele) => {
-                    if (ele.id === id) {
+                (song) => {
+                    if (song.id === action.payload.id) {
                         return {
-                            ...ele,
-                            favorite: !favorite,
+                            ...song,
+                            favorite: !action.payload.favorite,
                         };
                     }
-                    return ele;
+                    return song;
                 }
             );
-            if (favorite) {
-                state.favoritePageState.songs =
-                    state.favoritePageState.songs.filter((ele) => {
-                        return ele.id != id;
-                    });
-            } else {
-                state.favoritePageState.endFetch = false;
-                state.favoritePageState.currentPage = 0;
-                state.favoritePageState.songs = [];
-            }
+            state.favoritePageState.fetchCurrentPageStatus = "idle";
         },
 
         //fix when add more tab
-        handleDeleteSong: (state, action) => {
-            state.musicPageState.songs = state.musicPageState.songs.filter(
-                (ele) => {
-                    return ele.id !== action.payload;
-                }
-            );
+        handleDeleteSong: (state) => {
+            state.musicPageState.fetchCurrentPageStatus = "idle";
+            state.favoritePageState.fetchCurrentPageStatus = "idle";
         },
 
         //+Player
@@ -901,35 +961,24 @@ const userSlice = createSlice({
         });
 
         //Fetch songs for FavPage
-        builder.addCase(fetchUserFavSongsByPage.fulfilled, (state, action) => {
-            if (action.payload.data.length === 0) {
-                state.favoritePageState.endFetch = true;
-                return;
-            }
-            state.favoritePageState.currentPage =
-                state.favoritePageState.currentPage + 1;
-            state.favoritePageState.songs = [
-                ...state.favoritePageState.songs,
-                ...action.payload.data,
-            ];
+
+        builder.addCase(fetchUserSearchFavSongsByPage.pending, (state) => {
+            state.favoritePageState.fetchCurrentPageStatus = "pending";
         });
 
-        //Fetch songs when search for FavPage
         builder.addCase(
             fetchUserSearchFavSongsByPage.fulfilled,
             (state, action) => {
-                if (action.payload.data.length === 0) {
-                    state.favoritePageState.endFetch = true;
-                    return;
-                }
-                state.favoritePageState.currentPage =
-                    state.favoritePageState.currentPage + 1;
-                state.favoritePageState.songs = [
-                    ...state.favoritePageState.songs,
-                    ...action.payload.data,
-                ];
+                state.favoritePageState.totalSongs = action.payload.records;
+                state.favoritePageState.totalPage = action.payload.totalPage;
+                state.favoritePageState.songs = action.payload.data;
+                state.favoritePageState.fetchCurrentPageStatus = "success";
             }
         );
+
+        builder.addCase(fetchUserSearchFavSongsByPage.rejected, (state) => {
+            state.favoritePageState.fetchCurrentPageStatus = "failed";
+        });
 
         //Fetch Data for ProfilePage and NavBar
         builder.addCase(fetchUserProfile.pending, (state) => {

@@ -1,3 +1,5 @@
+
+
 const getDeviceFingerprint = () => {
     const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const language = navigator.language;

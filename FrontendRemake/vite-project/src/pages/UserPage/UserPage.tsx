@@ -24,7 +24,6 @@ export default function UserPage() {
                     element={<FavoriteMusicPage />}
                 ></Route>
                 <Route path="playlist/:id" element={<PlaylistPage/>}></Route>
-                {/* Add full screen blank when id is not exsit */}
             </Routes>
         </div>
     );

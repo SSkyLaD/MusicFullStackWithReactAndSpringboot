@@ -1,5 +1,5 @@
 import "./Favorite.scss";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
     faMagnifyingGlass,
@@ -10,17 +10,16 @@ import Empty from "../Component/Empty/Empty";
 import MusicCard from "../Component/MusicCard/MusicCard";
 import Loading from "../../../assets/Loading/Loading";
 import userSlice, {
-    fetchUserFavSongsByPage,
-    fetchUserSearchFavSongsByPage,
+    fetchUserSearchFavSongsByPage
 } from "../userSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "../../../redux/store";
-import { failedNotification } from "../Component/notification";
+import { failedNotification} from "../Component/notification";
 import useResetAndNavigate from "../../../CustomHook/useResetAndNavigate";
 
 export default function Favorite() {
-    const { favoritePageState } = useSelector(
-        (state: RootState) => state.users
+    const musicPage = useSelector(
+        (state: RootState) => state.users.favoritePageState
     );
     const dispatch = useDispatch<AppDispatch>();
     const resetAndNavigate = useResetAndNavigate();
@@ -29,17 +28,29 @@ export default function Favorite() {
     const [timeoutId, setTimeoutId] = useState<number>();
     const filterOptionRef = useRef<HTMLDivElement | null>(null);
 
-    const { songs, currentPage, endFetch } = favoritePageState;
-    const { searchValue, searchBy, sortBy, sortDirection } =
-        favoritePageState.filter;
-
+    const { searchValue, searchBy, sortBy, sortDirection } = musicPage.filter;
+    const {
+        currentPage,
+        fetchCurrentPageStatus,
+        totalPage,
+        totalSongs,
+    } = musicPage;
     const handleFilterChange = () => {
-        dispatch(userSlice.actions.resetCurrentPageFavPage());
+        dispatch(userSlice.actions.setCurrentPageFavPage(0));
         dispatch(userSlice.actions.resetSongsInFavPage());
-        dispatch(userSlice.actions.setEndFetchInFavPage(false));
+        dispatch(userSlice.actions.setFetchStatusFavPage());
     };
 
-    const songCards = favoritePageState.songs.map((ele) => {
+    const handlePageSelect = (page: number) => {
+        if (currentPage === page) {
+            return;
+        }
+        dispatch(userSlice.actions.setCurrentPageFavPage(page));
+        dispatch(userSlice.actions.resetSongsInFavPage());
+        dispatch(userSlice.actions.setFetchStatusFavPage());
+    };
+
+    const songCards = musicPage.songs.map((ele) => {
         return <MusicCard songData={ele} key={ele.id} playlistId={null} />;
     });
 
@@ -53,65 +64,44 @@ export default function Favorite() {
         }
 
         const newTimeoutId = setTimeout(() => {
-            dispatch(userSlice.actions.setSearchValueInFavPage(inputFiltered));
+            dispatch(
+                userSlice.actions.setSearchValueInFavPage(inputFiltered)
+            );
             handleFilterChange();
         }, 500); // Delay 0.5s
 
         setTimeoutId(newTimeoutId);
     };
 
-    const handlePlayAll = () => {
-        if (!endFetch) {
-            return;
-        }
-        dispatch(userSlice.actions.handlePlayAll(songs));
-    };
 
-    React.useEffect(() => {
-        if (!endFetch) {
-            if (!searchValue) {
-                dispatch(
-                    fetchUserFavSongsByPage({
-                        currentPage,
-                        sortBy,
-                        sortDirection,
-                    })
-                )
-                    .unwrap()
-                    .catch((err) => {
-                        if (err.code == 444) {
-                            resetAndNavigate();
-                            failedNotification(
-                                "Your account logged in different location"
-                            );
-                        }
-                    });
-            }
-            if (searchValue) {
-                dispatch(
-                    fetchUserSearchFavSongsByPage({
-                        currentPage,
-                        searchValue,
-                        searchBy,
-                        sortBy,
-                        sortDirection,
-                    })
-                )
-                    .unwrap()
-                    .catch((err) => {
-                        if (err.code == 444) {
-                            resetAndNavigate();
-                            failedNotification(
-                                "Your account logged in different location"
-                            );
-                        }
-                    });
-            }
+    useEffect(() => {
+        if (
+            fetchCurrentPageStatus == "idle" ||
+            fetchCurrentPageStatus == "failed"
+        ) {
+            dispatch(
+                fetchUserSearchFavSongsByPage({
+                    currentPage,
+                    searchValue,
+                    searchBy,
+                    sortBy,
+                    sortDirection,
+                })
+            )
+            .unwrap()
+            .catch((err) => {
+                if (err.code == 444) {
+                    resetAndNavigate();
+                    failedNotification(
+                        "Your account logged in different location"
+                    );
+                }
+            });
         }
-    }, [currentPage, endFetch, searchValue, searchBy, sortBy, sortDirection]);
+    }, [currentPage, searchValue, searchBy, sortBy, sortDirection, fetchCurrentPageStatus]);
 
-    React.useEffect(() => {
-        const handler = (e: MouseEvent) => {
+    useEffect(() => {
+        const handleEvent = (e: MouseEvent) => {
             if (
                 filterOptionRef.current &&
                 !filterOptionRef.current.contains(e.target as Node)
@@ -119,9 +109,9 @@ export default function Favorite() {
                 setShowFilter(false);
             }
         };
-        document.addEventListener("mousedown", handler);
+        document.addEventListener("mousedown", handleEvent);
         return () => {
-            document.removeEventListener("mousedown", handler);
+            document.removeEventListener("mousedown", handleEvent);
         };
     }, []);
 
@@ -129,17 +119,37 @@ export default function Favorite() {
         <div className="favorite">
             <div className="top-bar">
                 <div className="top-left">
-                    <h2>Your most favorite music</h2>
+                    <h2>Explore your favorite songs</h2>
                     <div className="play-all">
-                        <button onClick={() => handlePlayAll()}>
+                        <button
+                            disabled={
+                                fetchCurrentPageStatus !== "success"
+                                    ? true
+                                    : false
+                            }
+                            // onClick={handlePlayAll}
+                        >
                             <FontAwesomeIcon icon={faPlay} />
-                            <p>Play all</p>
+                            {/* <p>Play All This Page </p> */}
                         </button>
-                        <p>{songs.length}</p>
-                        {!endFetch ? <Loading /> : ""}
+
+                        {fetchCurrentPageStatus == "success" ? (
+                            <p>Total Songs : {totalSongs}</p>
+                        ) : (
+                            <Loading />
+                        )}
                     </div>
                 </div>
                 <div className="search">
+                    <input
+                        type="text"
+                        id="search-input"
+                        placeholder="Search here..."
+                        onChange={handleSearchInputChange}
+                    ></input>
+                    <div className="search-icon">
+                        <FontAwesomeIcon icon={faMagnifyingGlass} />
+                    </div>
                     <div
                         className="filter"
                         onClick={() => setShowFilter((prev) => !prev)}
@@ -323,23 +333,42 @@ export default function Favorite() {
                             </div>
                         </div>
                     )}
-                    <input
-                        type="text"
-                        id="search-input"
-                        placeholder="Search here..."
-                        onChange={handleSearchInputChange}
-                    ></input>
-                    <div className="search-icon">
-                        <FontAwesomeIcon icon={faMagnifyingGlass} />
-                    </div>
                 </div>
             </div>
-            {songs.length === 0 && endFetch ? (
+            {fetchCurrentPageStatus === "pending" && (
+                <div className="bottom-section">
+                    <Loading />
+                </div>
+            )}
+
+            {totalSongs === 0 && fetchCurrentPageStatus === "success" ? (
                 <div className="bottom-section">
                     <Empty />
                 </div>
             ) : (
-                <div className="music-list-container">{songCards}</div>
+                ""
+            )}
+            {fetchCurrentPageStatus === "success" && (
+                <div className="music-list-container">
+                    <div className="music-card-container">{songCards}</div>
+                    {totalPage! > 1 && (
+                        <div className="pagination">
+                            {Array.from({ length: totalPage! }, (_, i) => (
+                                <button
+                                    className={
+                                        currentPage === i
+                                            ? "selected-page-button"
+                                            : "page-button"
+                                    }
+                                    key={i}
+                                    onClick={() => handlePageSelect(i)}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
             )}
         </div>
     );

@@ -144,7 +144,6 @@ export default function MusicCard({ songData, playlistId }: MusicCardPrams) {
             });
     };
 
-    //Nên sử dụng thunk
     const handleRemoveFromPlaylist = (playlistId: number, songId: number) => {
         dispatch(fetchRemoveSongFromPlaylist({ playlistId, songId }))
             .unwrap()

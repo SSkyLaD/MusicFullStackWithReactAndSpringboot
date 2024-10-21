@@ -45,10 +45,13 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.apache.catalina.startup.ExpandWar.deleteDir;
+import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
 
 @Service
 @AllArgsConstructor
 public class UserServiceImpl implements UserService {
+    private static final List<String> allowImageFileType = listOf("image/jpg", "image/jpeg", "image/png");
+    private static final List<String> allowAudioFileType = listOf("audio/mpeg", "audio/flac", "audio/x-flac");
 
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
@@ -77,10 +80,8 @@ public class UserServiceImpl implements UserService {
         if (!user.getUserFingerPrint().equals(fingerprint)) {
             throw new FingerprintMismatchException();
         }
-        List<String> allowFileType = new ArrayList<>();
-        allowFileType.add("image/jpg");
-        allowFileType.add("image/png");
-        if(!allowFileType.contains(file.getContentType())){
+        System.out.println(file.getContentType());
+        if(!allowImageFileType.contains(file.getContentType())){
             throw new InvalidInputException("Not Allowed file type!");
         }
         byte[] fileContent = file.getBytes();
@@ -106,11 +107,10 @@ public class UserServiceImpl implements UserService {
             throw new FingerprintMismatchException();
         }
         List<String> allowFileType = new ArrayList<>();
-        allowFileType.add("image/jpg");
-        allowFileType.add("image/png");
-        if(!allowFileType.contains(file.getContentType())){
+        if(!allowImageFileType.contains(file.getContentType())){
             throw new InvalidInputException("Not Allowed file type!");
         }
+
         byte[] fileContent = file.getBytes();
         String encodedString = Base64.getEncoder().encodeToString(fileContent);
         String encodedImage = "data:" + file.getContentType() + ";base64," + encodedString;
@@ -302,17 +302,13 @@ public class UserServiceImpl implements UserService {
         if (!user.getUserFingerPrint().equals(fingerprint)) {
             throw new FingerprintMismatchException();
         }
-        List<String> allowFileType = new ArrayList<>();
-        allowFileType.add("audio/flac");
-        allowFileType.add("audio/x-flac");
-        allowFileType.add("audio/mpeg");
         List<SongDto> addedSong = new ArrayList<>();
         for (MultipartFile file : files) {
             String extension = FilenameUtils.getExtension(file.getOriginalFilename());
             if ((!Objects.equals(extension, "flac") && !Objects.equals(extension, "mp3")) || extension.isEmpty()) {
                 continue;
             }
-            if (!allowFileType.contains(file.getContentType())) {
+            if (!allowAudioFileType.contains(file.getContentType())) {
                 continue;
             }
             if (file.getSize() > user.getAvailableMemory()) {

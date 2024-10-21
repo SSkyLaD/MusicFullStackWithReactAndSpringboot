@@ -21,7 +21,6 @@ import java.io.IOException;
 
 @Component
 @AllArgsConstructor
-//Filter Job: Check if you have token
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtility jwtUtility;

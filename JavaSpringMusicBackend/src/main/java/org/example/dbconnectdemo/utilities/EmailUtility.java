@@ -21,4 +21,5 @@ public class EmailUtility {
         helper.setText(body, true);
         mailSender.send(message);
     }
+
 }

@@ -12,7 +12,6 @@ import org.example.dbconnectdemo.dto.SongListDto;
 import org.example.dbconnectdemo.dto.TransferPageObject;
 import org.example.dbconnectdemo.exception.FingerprintMismatchException;
 import org.example.dbconnectdemo.exception.InvalidInputException;
-import org.example.dbconnectdemo.exception.ResourceNotFoundException;
 import org.example.dbconnectdemo.map.SongMapper;
 import org.example.dbconnectdemo.model.Song;
 import org.example.dbconnectdemo.model.SongList;
@@ -34,7 +33,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -108,6 +106,7 @@ public class UserController {
         } catch (FingerprintMismatchException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(444, e.getMessage()));
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400, "Error!"));
         }
     }
@@ -258,14 +257,14 @@ public class UserController {
             String direction = params.get("direction") == null ? "asc" : params.get("direction");
             if (!name.isEmpty()) {
                 TransferPageObject data = userService.searchAllUserFavoriteSongsLikeNameWithSortAndPaging(username, pageNo, pageSize, sortField, direction, name, fingerprint);
-                return ResponseEntity.status(HttpStatus.OK).body(new PageResponse(200, "Success!", pageNo, data.totalPage(), data.totalPage(), data.data()));
+                return ResponseEntity.status(HttpStatus.OK).body(new PageResponse(200, "Success!", pageNo, data.totalPage(), data.totalResult(), data.data()));
             }
             if (!artist.isEmpty()) {
                 TransferPageObject data = userService.searchAllUserFavoriteSongsLikeArtistWithSortAndPaging(username, pageNo, pageSize, sortField, direction, artist, fingerprint);
-                return ResponseEntity.status(HttpStatus.OK).body(new PageResponse(200, "Success!", pageNo, data.totalPage(), data.totalPage(), data.data()));
+                return ResponseEntity.status(HttpStatus.OK).body(new PageResponse(200, "Success!", pageNo, data.totalPage(), data.totalResult(), data.data()));
             }
             TransferPageObject data = userService.searchAllUserFavoriteSongsLikeNameWithSortAndPaging(username, pageNo, pageSize, sortField, direction, name, fingerprint);
-            return ResponseEntity.status(HttpStatus.OK).body(new PageResponse(200, "Success!", pageNo, data.totalPage(), data.totalPage(), data.data()));
+            return ResponseEntity.status(HttpStatus.OK).body(new PageResponse(200, "Success!", pageNo, data.totalPage(), data.totalResult(), data.data()));
         } catch (FingerprintMismatchException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(444, e.getMessage()));
         } catch (Exception e) {
@@ -482,7 +481,7 @@ public class UserController {
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
-    public ResponseEntity<Object> maxUploadSizeExceeded(MaxUploadSizeExceededException e) {
+    public ResponseEntity<Object> maxUploadSizeExceeded() {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new BaseResponse(400, "Files size exceeded 200MB"));
     }
 }
