@@ -994,9 +994,9 @@ const userSlice = createSlice({
                 action.payload.data.numberOfPlaylist;
             state.profileState.availableMemory =
                 action.payload.data.availableMemory;
-            state.navBarState.userAvatarImage = action.payload.data.avatarImage;
+            state.navBarState.userAvatarImage = action.payload.data.avatarImage === "" ? "/avatardefault_92824.png" : action.payload.data.avatarImage;
             state.homePageState.userBackgroundImage =
-                action.payload.data.backgroundImage;
+                action.payload.data.backgroundImage === "" ? "/danny-howe-bn-D2bCvpik-unsplash.jpg" : action.payload.data.backgroundImage;
         });
         builder.addCase(fetchUserProfile.rejected, (state) => {
             state.profileState.fetchProfileStatus = "failed";
@@ -1024,6 +1024,11 @@ const userSlice = createSlice({
         });
         builder.addCase(uploadBackgroundImage.rejected, (state) => {
             state.profileState.fetchUploadUserBackgroundImgStatus = "failed";
+        });
+
+        //Handle upload userSongs
+        builder.addCase(uploadUserSongs.fulfilled, (state) => {
+            state.musicPageState.fetchCurrentPageStatus = "idle"
         });
 
         //Handle delete account

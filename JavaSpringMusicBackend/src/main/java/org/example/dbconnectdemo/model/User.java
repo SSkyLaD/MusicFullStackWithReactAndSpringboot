@@ -7,11 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 
@@ -36,25 +33,10 @@ public class User extends AppUser {
     private int sumOfSongs = 0;
 
     @Column(length = Integer.MAX_VALUE)
-    private String userAvatar;
-
-    {
-        try {
-            userAvatar ="data:image/png;base64," + Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get("src/main/resources/static/avatardefault_92824.png")));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private String userAvatar ="";
 
     @Column(length = Integer.MAX_VALUE)
-    private String userBackground;
-    {
-        try {
-            userBackground ="data:image/jpeg;base64,"+ Base64.getEncoder().encodeToString(Files.readAllBytes(Paths.get("src/main/resources/static/danny-howe-bn-D2bCvpik-unsplash.jpg")));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    private String userBackground ="";
 
     @OneToMany(cascade = CascadeType.ALL)
     @JsonManagedReference

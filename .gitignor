@@ -1,5 +1,7 @@
 #env node
 **/.env
 
-#
+#backend
 **/application.properties
+**/docker-compose.yml
+**/Dockerfile

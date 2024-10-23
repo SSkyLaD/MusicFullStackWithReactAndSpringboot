@@ -25,6 +25,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
@@ -84,15 +88,15 @@ public class AuthenticateServiceImpl implements AuthenticateService {
             throw new UsernameAlreadyExistException("Username already exist");
         }
 
-        File userDir = new File(applicationConfig.getStaticFileUrl() + "\\" + userDto.getUsername());
-        if (!userDir.exists()) {
-            if (!userDir.mkdir()) {
-                throw new RuntimeException("Create directory failed");
-            }
+        Path userDirPath = Paths.get(applicationConfig.getStaticFileUrl(), userDto.getUsername());
+        try {
+            Files.createDirectories(userDirPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Create directory failed", e);
         }
         User user = UserMapper.mapToUser(userDto);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setUserDir(userDir.getAbsolutePath());
+        user.setUserDir(userDirPath.toAbsolutePath().toString());
         User savedUser = userRepository.save(user);
 
         UserOtp otp = new UserOtp();

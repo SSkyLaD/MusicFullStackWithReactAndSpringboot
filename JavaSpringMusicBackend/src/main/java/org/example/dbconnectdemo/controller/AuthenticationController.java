@@ -12,7 +12,6 @@ import org.example.dbconnectdemo.dto.Response.ObjectResponse;
 import org.example.dbconnectdemo.exception.InvalidInputException;
 import org.example.dbconnectdemo.exception.UsernameAlreadyExistException;
 import org.example.dbconnectdemo.service.AuthenticateService;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
@@ -38,6 +37,8 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new BaseResponse(500,"Error occurred!"));
         }
     }
+
+    //ĐÃ THAY BẰNG LOGIN V2
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginReqBody loginReqBody){
         try {

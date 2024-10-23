@@ -2,6 +2,7 @@ package org.example.dbconnectdemo.filterAndConfig.config;
 
 import lombok.AllArgsConstructor;
 import org.example.dbconnectdemo.filterAndConfig.filter.JwtAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -21,17 +22,18 @@ import java.util.List;
 @AllArgsConstructor
 public class SecurityConfig {
 
+    private final ApplicationConfig applicationConfig;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
 
-    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**", "api/v1/users/songs/stream/**"};
+    private final String[] PUBLIC_ENDPOINTS = {"/api/v1/auth/**", "api/v1/users/songs/stream/**", "/"};
 
     @Bean
     public CorsFilter corsFilter() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:5150"));
+        config.setAllowedOrigins(List.of(applicationConfig.getFrontendUrl()));
         config.addAllowedHeader("*");
         config.addAllowedMethod("*");
         source.registerCorsConfiguration("/**", config);

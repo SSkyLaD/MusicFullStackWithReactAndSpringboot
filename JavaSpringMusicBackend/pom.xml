@@ -33,13 +33,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.oracle</groupId>
-            <artifactId>ojdbc11</artifactId>
-            <version>1.0</version>
-            <scope>system</scope>
-            <systemPath>d:/Oracle/ojdbc11.jar</systemPath>
-        </dependency>
-        <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>

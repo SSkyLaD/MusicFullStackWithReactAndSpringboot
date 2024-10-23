@@ -97,11 +97,10 @@ export default function Music() {
 
         dispatch(uploadUserSongs(fd))
             .unwrap()
-            .then((res) => {
+            .then(() => {
                 successNotification("File uploaded successfully");
                 setUploadedFiles(null);
                 inputFileRef.current!.value = "";
-                dispatch(userSlice.actions.addSongsInMusicPage(res.data));
             })
             .catch((err) => {
                 if (err.code == 444) {

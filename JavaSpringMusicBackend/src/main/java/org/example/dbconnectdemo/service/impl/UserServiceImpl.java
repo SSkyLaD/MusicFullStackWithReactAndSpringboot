@@ -39,6 +39,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -296,12 +298,17 @@ public class UserServiceImpl implements UserService {
         return SongMapper.mapToSongDto(songRepository.save(song));
     }
 
-    @Override
-    public List<SongDto> addSongsToUser(String username, MultipartFile[] files, String fingerprint) throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException {
-        User user = userRepository.findByUsername(username).orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+
+
+    public List<SongDto> addSongsToUser(String username, MultipartFile[] files, String fingerprint)
+            throws IOException, CannotReadException, TagException, ReadOnlyFileException, InvalidAudioFrameException {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Cannot find user"));
+
         if (!user.getUserFingerPrint().equals(fingerprint)) {
             throw new FingerprintMismatchException();
         }
+
         List<SongDto> addedSong = new ArrayList<>();
         for (MultipartFile file : files) {
             String extension = FilenameUtils.getExtension(file.getOriginalFilename());
@@ -314,21 +321,24 @@ public class UserServiceImpl implements UserService {
             if (file.getSize() > user.getAvailableMemory()) {
                 throw new InvalidInputException("Your storage memory limit exceeded");
             }
+
             Song song = new Song();
             song.setFileName(file.getOriginalFilename());
-            String fileUrl = user.getUserDir() + "\\" + System.currentTimeMillis() + "-" + file.getOriginalFilename();
-            song.setFileUrl(fileUrl);
-            file.transferTo(new File(fileUrl));
+
+            String fileNameWithTimestamp = System.currentTimeMillis() + "-" + file.getOriginalFilename();
+            Path fileUrlPath = Paths.get(user.getUserDir(), fileNameWithTimestamp);
+            song.setFileUrl(fileUrlPath.toString());
+
+            file.transferTo(fileUrlPath.toFile());
             song.setSize(file.getSize());
 
-            AudioFile audioFile = AudioFileIO.read(new File(fileUrl));
+            AudioFile audioFile = AudioFileIO.read(fileUrlPath.toFile());
             AudioHeader audioHeader = audioFile.getAudioHeader();
             Tag tag = audioFile.getTag();
 
             String[] filenameSplit = Objects.requireNonNull(file.getOriginalFilename()).split("-");
-            String title = filenameSplit[filenameSplit.length - 1];
+            String title = filenameSplit[filenameSplit.length - 1].replaceAll("\\.(flac|mp3)$", "").trim();
             StringBuilder artist = new StringBuilder();
-            title = title.replaceAll("\\.(flac|mp3)$", "").trim();
 
             for (int i = 0; i < filenameSplit.length - 1; i++) {
                 artist.append(filenameSplit[i]).append(" ");
@@ -353,18 +363,22 @@ public class UserServiceImpl implements UserService {
                     song.setAlbumImageBase64("data:image/jpeg;base64," + Base64.getEncoder().encodeToString(imageBytes));
                 }
             }
+
             song.setDuration(audioHeader.getTrackLength());
             song.setUserOwnerId(user.getId());
             Song savedSong = songRepository.save(song);
             addedSong.add(SongMapper.mapToSongDto(savedSong));
+
             user.setSumOfSongs(user.getSumOfSongs() + 1);
             if (!user.getRole().equals(Role.ADMIN)) {
                 user.setAvailableMemory(user.getAvailableMemory() - song.getSize());
             }
         }
+
         userRepository.save(user);
         return addedSong;
     }
+
 
     @Override
     public SongDto deleteSongFromUser(String username, Long id, String fingerprint) {
